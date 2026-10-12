@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:c="clr-namespace:Lumion.Controls"
+             x:Class="Lumion.Views.ConnexionPage"
+             BackgroundColor="{StaticResource Blanc}"
+             Shell.TabBarIsVisible="False">
+    <ScrollView>
+        <VerticalStackLayout Padding="24,16,24,24" Spacing="16">
+            <c:Logo HorizontalOptions="Start" />
+
+            <VerticalStackLayout Spacing="6" Margin="0,12,0,0">
+                <Label Text="Connexion" Style="{StaticResource TitrePage}" />
+                <Label Style="{StaticResource SousTitrePage}" FontSize="15"
+                       Text="Accédez à Lumion pour signaler des coupures dans votre quartier et suivre leur résolution." />
+            </VerticalStackLayout>
+
+            <c:Etapes Etape="1" Margin="0,8" />
+
+            <VerticalStackLayout Spacing="6">
+                <Label Text="Numéro de téléphone" Style="{StaticResource TitreElement}" />
+                <Border x:Name="ChampNumero" Style="{StaticResource Champ}">
+                    <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="10">
+                        <c:Icone Nom="Telephone" Taille="20" Couleur="{StaticResource Gris}" />
+                        <Label Grid.Column="1" Text="+237" FontFamily="OpenSansSemibold" FontSize="16"
+                               TextColor="{StaticResource Encre}" VerticalOptions="Center" />
+                        <Entry Grid.Column="2" x:Name="Numero" Keyboard="Telephone" Placeholder="6 71 23 45 67"
+                               MaxLength="13" ReturnType="Done" TextChanged="NumeroModifie" Completed="Continuer"
+                               SemanticProperties.Description="Numéro de téléphone" />
+                    </Grid>
+                </Border>
+                <Label x:Name="Erreur" Style="{StaticResource Erreur}" IsVisible="False" />
+                <Label Style="{StaticResource Discret}"
+                       Text="Pas de mot de passe à retenir : un code à 6 chiffres vous est envoyé par SMS." />
+            </VerticalStackLayout>
+
+            <Button x:Name="Valider" Text="Recevoir le code" Clicked="Continuer" IsEnabled="False" />
+
+            <Grid ColumnDefinitions="*,Auto,*" ColumnSpacing="12" Margin="0,4">
+                <BoxView HeightRequest="1" Color="{StaticResource Bordure}" VerticalOptions="Center" />
+                <Label Grid.Column="1" Text="ou" Style="{StaticResource Discret}" />
+                <BoxView Grid.Column="2" HeightRequest="1" Color="{StaticResource Bordure}" VerticalOptions="Center" />
+            </Grid>
+
+            <Button Text="Créer un compte" Style="{StaticResource BoutonSecondaire}" Clicked="Inscrire" />
+            <Button Text="Continuer sans compte" Style="{StaticResource BoutonLien}" Clicked="SansCompte" />
+            <Label Style="{StaticResource Discret}" HorizontalTextAlignment="Center"
+                   Text="Sans compte, la carte, l'historique et les statistiques restent consultables." />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

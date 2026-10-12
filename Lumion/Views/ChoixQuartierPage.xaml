@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:c="clr-namespace:Lumion.Controls"
+             xmlns:m="clr-namespace:Lumion.Core.Models;assembly=Lumion.Core"
+             x:Class="Lumion.Views.ChoixQuartierPage"
+             BackgroundColor="{StaticResource Blanc}"
+             Shell.TabBarIsVisible="False">
+    <Grid RowDefinitions="Auto,*,Auto" Padding="24,16,24,16" RowSpacing="14">
+        <VerticalStackLayout Spacing="14">
+            <c:Logo HorizontalOptions="Start" />
+            <c:Etapes Etape="3" />
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Choisir votre quartier" Style="{StaticResource TitreSection}" FontSize="22" />
+                <Label Style="{StaticResource SousTitrePage}"
+                       Text="Vous serez abonné aux alertes de ce quartier. Vous pourrez en suivre d'autres ensuite." />
+            </VerticalStackLayout>
+
+            <Button x:Name="Position" Text="Utiliser ma position" Style="{StaticResource BoutonSecondaire}"
+                    Clicked="Localiser" />
+            <Label x:Name="Info" Style="{StaticResource Discret}" IsVisible="False" />
+
+            <Border Style="{StaticResource Champ}">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                    <c:Icone Nom="Recherche" Taille="20" Couleur="{StaticResource Gris}" />
+                    <Entry Grid.Column="1" x:Name="Recherche" Placeholder="Rechercher un quartier à Douala…"
+                           TextChanged="Filtrer" SemanticProperties.Description="Rechercher un quartier" />
+                </Grid>
+            </Border>
+        </VerticalStackLayout>
+
+        <CollectionView Grid.Row="1" x:Name="Liste" SelectionMode="Single" SelectionChanged="Choisir">
+            <CollectionView.EmptyView>
+                <Label Text="Aucun quartier ne correspond à votre recherche." Style="{StaticResource Discret}"
+                       HorizontalTextAlignment="Center" Margin="0,24" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="m:Quartier">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12" Padding="4,10" MinimumHeightRequest="56">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroupList>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal" />
+                                    <VisualState x:Name="Selected">
+                                        <VisualState.Setters>
+                                            <Setter Property="BackgroundColor" Value="{StaticResource PrimaireClair}" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateGroupList>
+                        </VisualStateManager.VisualStateGroups>
+                        <c:Icone Nom="Epingle" Taille="20" Couleur="{StaticResource Gris}" />
+                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                            <Label Text="{Binding Nom}" Style="{StaticResource TitreElement}" />
+                            <Label Text="{Binding Arrondissement}" Style="{StaticResource Discret}" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Button Grid.Row="2" x:Name="Terminer" Text="Créer mon compte" Clicked="Creer" IsEnabled="False" />
+    </Grid>
+</ContentPage>
