@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:c="clr-namespace:Lumion.Controls"
+             xmlns:vm="clr-namespace:Lumion.ViewModels"
+             x:Class="Lumion.Views.AccueilPage"
+             x:DataType="vm:AccueilViewModel"
+             BackgroundColor="{StaticResource Blanc}">
+    <Grid RowDefinitions="Auto,Auto,*">
+        <c:EnTete />
+
+        <!-- Recherche d'un quartier (EF3.4) -->
+        <Border Grid.Row="1" Style="{StaticResource Champ}" Margin="16,4,16,10">
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                <c:Icone Nom="Recherche" Taille="22" />
+                <Entry Grid.Column="1" Text="{Binding Recherche}" Placeholder="Rechercher un quartier à Douala…"
+                       ReturnType="Search" SemanticProperties.Description="Rechercher un quartier" />
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2">
+            <!-- Carte par quartier -->
+            <ContentView x:Name="ZoneCarte" IsVisible="{Binding VueCarte}" />
+
+            <!-- Vue liste -->
+            <CollectionView ItemsSource="{Binding Lignes}" IsVisible="{Binding VueListe}"
+                            BackgroundColor="{StaticResource Fond}" Margin="0">
+                <CollectionView.Header>
+                    <BoxView HeightRequest="72" Color="Transparent" />
+                </CollectionView.Header>
+                <CollectionView.Footer>
+                    <BoxView HeightRequest="88" Color="Transparent" />
+                </CollectionView.Footer>
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="32,96,32,0" Spacing="8">
+                        <c:Icone Nom="Recherche" Taille="36" Couleur="{StaticResource GrisClair}" />
+                        <Label Text="Aucun quartier trouvé" Style="{StaticResource TitreElement}" HorizontalTextAlignment="Center" />
+                        <Label Text="Vérifiez l'orthographe ou effacez la recherche." Style="{StaticResource Discret}"
+                               HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:LigneQuartier">
+                        <Grid Padding="16,5">
+                            <Border Style="{StaticResource Carte}" Padding="14,12">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding OuvrirFicheCommand, Source={RelativeSource AncestorType={x:Type vm:AccueilViewModel}}, x:DataType=vm:AccueilViewModel}"
+                                        CommandParameter="{Binding Id}" />
+                                </Border.GestureRecognizers>
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                    <Border Style="{StaticResource Rond}" BackgroundColor="{Binding Couleur}">
+                                        <c:Icone Nom="{Binding Icone}" Couleur="{StaticResource Blanc}" Taille="22" />
+                                    </Border>
+                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="3">
+                                        <Label Text="{Binding Nom}" Style="{StaticResource TitreElement}" />
+                                        <Border Style="{StaticResource Pastille}" BackgroundColor="{Binding Clair}"
+                                                HorizontalOptions="Start" Padding="8,3">
+                                            <Label Text="{Binding Libelle}" TextColor="{Binding Couleur}" FontSize="12"
+                                                   FontFamily="OpenSansSemibold" />
+                                        </Border>
+                                        <Label Text="{Binding Detail}" Style="{StaticResource Discret}" />
+                                    </VerticalStackLayout>
+                                    <c:Icone Grid.Column="2" Nom="ChevronDroite" Taille="18" Couleur="{StaticResource GrisClair}" />
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Bascule carte / liste -->
+            <Border HorizontalOptions="Start" VerticalOptions="Start" Margin="16,12" Padding="4"
+                    BackgroundColor="{StaticResource Blanc}" StrokeShape="RoundRectangle 22" StrokeThickness="0">
+                <Border.Shadow>
+                    <Shadow Brush="{StaticResource Encre}" Opacity="0.15" Radius="10" Offset="0,2" />
+                </Border.Shadow>
+                <c:Choix Options="Carte|Liste" Change="VueChangee" WidthRequest="220" Etire="True" />
+            </Border>
+
+            <!-- Recentrage sur ma position : le GPS n'est sollicité que sur demande (ENF4) -->
+            <Border HorizontalOptions="End" VerticalOptions="Start" Margin="16,12" WidthRequest="48" HeightRequest="48"
+                    BackgroundColor="{StaticResource Blanc}" StrokeShape="Ellipse" StrokeThickness="0"
+                    IsVisible="{Binding VueCarte}" SemanticProperties.Description="Centrer sur ma position">
+                <Border.Shadow>
+                    <Shadow Brush="{StaticResource Encre}" Opacity="0.15" Radius="10" Offset="0,2" />
+                </Border.Shadow>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="MaPosition" />
+                </Border.GestureRecognizers>
+                <c:Icone Nom="Cible" />
+            </Border>
+
+            <!-- Hors ligne : dernière carte en cache (UC04 E1) -->
+            <Border HorizontalOptions="Center" VerticalOptions="Start" Margin="0,72,0,0" Padding="12,6"
+                    BackgroundColor="{StaticResource Encre}" StrokeShape="RoundRectangle 14" StrokeThickness="0"
+                    IsVisible="{Binding HorsLigne}">
+                <HorizontalStackLayout Spacing="8">
+                    <c:Icone Nom="HorsLigne" Taille="16" Couleur="{StaticResource Blanc}" />
+                    <Label Text="{Binding MentionHorsLigne}" TextColor="{StaticResource Blanc}" FontSize="12" />
+                </HorizontalStackLayout>
+            </Border>
+
+            <!-- Suggestions de recherche -->
+            <Border VerticalOptions="Start" Margin="16,0" Padding="4" Style="{StaticResource Carte}"
+                    IsVisible="{Binding SuggestionsVisibles}">
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Suggestions}">
+                    <BindableLayout.EmptyView>
+                        <Label Text="Aucun quartier trouvé" Style="{StaticResource Discret}" Padding="12" />
+                    </BindableLayout.EmptyView>
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:LigneQuartier">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Padding="12,0" HeightRequest="48"
+                                  BackgroundColor="Transparent">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding OuvrirFicheCommand, Source={RelativeSource AncestorType={x:Type vm:AccueilViewModel}}, x:DataType=vm:AccueilViewModel}"
+                                        CommandParameter="{Binding Id}" />
+                                </Grid.GestureRecognizers>
+                                <c:Icone Nom="{Binding Icone}" Couleur="{Binding Couleur}" Taille="18" />
+                                <Label Grid.Column="1" Text="{Binding Nom}" Style="{StaticResource TitreElement}" VerticalOptions="Center" />
+                                <Label Grid.Column="2" Text="{Binding Libelle}" TextColor="{Binding Couleur}" FontSize="12"
+                                       VerticalOptions="Center" />
+                            </Grid>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Légende : couleur + icône + libellé (ENF6) -->
+            <Border VerticalOptions="End" Margin="16,0,16,84" Style="{StaticResource Carte}" Padding="14,10"
+                    IsVisible="{Binding LegendeVisible}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Légende — État de l'électricité" Style="{StaticResource TitreElement}" FontSize="13" />
+                    <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="4">
+                        <VerticalStackLayout Spacing="4">
+                            <Border Style="{StaticResource Rond}" WidthRequest="24" HeightRequest="24" BackgroundColor="{StaticResource Vert}">
+                                <c:Icone Nom="Check" Taille="12" Couleur="{StaticResource Blanc}" />
+                            </Border>
+                            <Label Text="Courant&#10;normal" FontSize="11" HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Border Style="{StaticResource Rond}" WidthRequest="24" HeightRequest="24" BackgroundColor="{StaticResource Orange}">
+                                <c:Icone Nom="Eclair" Taille="12" Couleur="{StaticResource Blanc}" />
+                            </Border>
+                            <Label Text="Coupure&#10;signalée" FontSize="11" HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2" Spacing="4">
+                            <Border Style="{StaticResource Rond}" WidthRequest="24" HeightRequest="24" BackgroundColor="{StaticResource Rouge}">
+                                <c:Icone Nom="Eclair" Taille="12" Couleur="{StaticResource Blanc}" />
+                            </Border>
+                            <Label Text="Coupure&#10;confirmée" FontSize="11" HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="3" Spacing="4">
+                            <Border Style="{StaticResource Rond}" WidthRequest="24" HeightRequest="24" BackgroundColor="{StaticResource Bleu}">
+                                <c:Icone Nom="Horloge" Taille="12" Couleur="{StaticResource Blanc}" />
+                            </Border>
+                            <Label Text="Délestage&#10;annoncé" FontSize="11" HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Action principale, toujours à un toucher -->
+            <Border HorizontalOptions="End" VerticalOptions="End" Margin="16,0,16,16" Padding="8,0,20,0" HeightRequest="56"
+                    BackgroundColor="{StaticResource Primaire}" StrokeShape="RoundRectangle 28" StrokeThickness="0"
+                    IsVisible="{Binding SansFiche}" SemanticProperties.Description="Signaler une coupure">
+                <Border.Shadow>
+                    <Shadow Brush="{StaticResource Encre}" Opacity="0.25" Radius="12" Offset="0,4" />
+                </Border.Shadow>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding SignalerCommand}" />
+                </Border.GestureRecognizers>
+                <HorizontalStackLayout Spacing="10">
+                    <Border Style="{StaticResource Rond}" WidthRequest="40" HeightRequest="40" BackgroundColor="{StaticResource Blanc}">
+                        <c:Icone Nom="Plus" Couleur="{StaticResource PrimaireFonce}" />
+                    </Border>
+                    <Label Text="Signaler" FontFamily="OpenSansSemibold" FontSize="17" TextColor="{StaticResource Encre}"
+                           VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </Border>
+
+            <!-- Fiche quartier (feuille glissante) -->
+            <Border VerticalOptions="End" BackgroundColor="{StaticResource Blanc}" StrokeThickness="0"
+                    StrokeShape="RoundRectangle 28,28,0,0" Padding="0,8,0,0" IsVisible="{Binding AFiche}"
+                    MaximumHeightRequest="520">
+                <Border.Shadow>
+                    <Shadow Brush="{StaticResource Encre}" Opacity="0.2" Radius="16" Offset="0,-4" />
+                </Border.Shadow>
+                <ScrollView>
+                    <VerticalStackLayout Padding="16,4,16,16" Spacing="12">
+                        <BoxView WidthRequest="44" HeightRequest="4" CornerRadius="2" Color="{StaticResource Bordure}"
+                                 HorizontalOptions="Center" />
+
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                            <Border Style="{StaticResource Rond}" WidthRequest="52" HeightRequest="52"
+                                    BackgroundColor="{Binding Fiche.Couleur}">
+                                <c:Icone Nom="{Binding Fiche.Icone}" Couleur="{StaticResource Blanc}" Taille="26" />
+                            </Border>
+                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                <Label Text="{Binding Fiche.Nom}" Style="{StaticResource TitrePage}" FontSize="24" />
+                                <Label Text="{Binding Fiche.Ville}" Style="{StaticResource Discret}" />
+                            </VerticalStackLayout>
+                            <Border Grid.Column="2" Style="{StaticResource Rond}" BackgroundColor="{StaticResource Fond}"
+                                    SemanticProperties.Description="Fermer la fiche">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding FermerFicheCommand}" />
+                                </Border.GestureRecognizers>
+                                <c:Icone Nom="Croix" Taille="20" />
+                            </Border>
+                        </Grid>
+
+                        <!-- État actuel -->
+                        <Border StrokeThickness="0" StrokeShape="RoundRectangle 18" Padding="14,12"
+                                BackgroundColor="{Binding Fiche.Clair}">
+                            <VerticalStackLayout Spacing="10">
+                                <VerticalStackLayout>
+                                    <Label Text="État actuel" Style="{StaticResource Discret}" />
+                                    <Label Text="{Binding Fiche.EtatTitre}" TextColor="{Binding Fiche.Couleur}"
+                                           FontFamily="OpenSansSemibold" FontSize="20" />
+                                    <Label Text="{Binding Fiche.EtatDescription}" FontSize="13" />
+                                </VerticalStackLayout>
+                                <Border BackgroundColor="{StaticResource Blanc}" StrokeThickness="0" StrokeShape="RoundRectangle 14"
+                                        Padding="12,10" IsVisible="{Binding Fiche.ACoupure}">
+                                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout>
+                                            <Label Text="Début" Style="{StaticResource Discret}" FontSize="12" />
+                                            <Label Text="{Binding Fiche.Debut}" Style="{StaticResource Chiffre}" />
+                                            <Label Text="{Binding Fiche.DebutJour}" Style="{StaticResource Discret}" FontSize="12" />
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1">
+                                            <Label Text="Durée en direct" Style="{StaticResource Discret}" FontSize="12" />
+                                            <Label Text="{Binding Fiche.Duree}" Style="{StaticResource Chiffre}" />
+                                            <Label Text="{Binding Fiche.DureeMention}" TextColor="{Binding Fiche.Couleur}" FontSize="12" />
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="2">
+                                            <Label Text="Confirmations" Style="{StaticResource Discret}" FontSize="12" />
+                                            <Label Text="{Binding Fiche.Confirmations}" Style="{StaticResource Chiffre}" />
+                                            <Label Text="habitants" Style="{StaticResource Discret}" FontSize="12" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </Border>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <!-- Évolution du signalement -->
+                        <Border Style="{StaticResource Carte}" BackgroundColor="{StaticResource Fond}" StrokeThickness="0"
+                                Padding="14,12" IsVisible="{Binding Fiche.ACoupure}">
+                            <VerticalStackLayout Spacing="10">
+                                <Label Text="Évolution du signalement" Style="{StaticResource TitreElement}" />
+                                <FlexLayout BindableLayout.ItemsSource="{Binding Fiche.Etapes}" JustifyContent="SpaceBetween">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:EtapeChronologie">
+                                            <VerticalStackLayout Spacing="2">
+                                                <Ellipse WidthRequest="14" HeightRequest="14" HorizontalOptions="Start"
+                                                         Fill="{Binding Couleur}" />
+                                                <Label Text="{Binding Heure}" FontFamily="OpenSansSemibold" FontSize="12"
+                                                       TextColor="{StaticResource Encre}" />
+                                                <Label Text="{Binding Libelle}" Style="{StaticResource Discret}" FontSize="11" />
+                                            </VerticalStackLayout>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </FlexLayout>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <!-- Résumé communautaire -->
+                        <Border Style="{StaticResource Carte}" BackgroundColor="{StaticResource Fond}" StrokeThickness="0"
+                                Padding="14,12" IsVisible="{Binding Fiche.ACoupure}">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <c:Icone Nom="Document" Taille="20" VerticalOptions="Start" />
+                                <VerticalStackLayout Grid.Column="1">
+                                    <Label Text="Résumé communautaire" Style="{StaticResource TitreElement}" />
+                                    <Label Text="{Binding Fiche.Resume}" Style="{StaticResource Discret}" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+
+                        <!-- Quartier sans coupure : repères -->
+                        <Border Style="{StaticResource Carte}" BackgroundColor="{StaticResource Fond}" StrokeThickness="0"
+                                Padding="14,12" IsVisible="{Binding Fiche.SansCoupure}">
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <VerticalStackLayout>
+                                    <Label Text="Dernière coupure" Style="{StaticResource Discret}" FontSize="12" />
+                                    <Label Text="{Binding Fiche.DerniereCoupure}" Style="{StaticResource TitreElement}" FontSize="13" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1">
+                                    <Label Text="Ce mois-ci" Style="{StaticResource Discret}" FontSize="12" />
+                                    <Label Text="{Binding Fiche.CoupuresDuMois}" Style="{StaticResource TitreElement}" FontSize="13" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+
+                        <!-- Actions selon l'état -->
+                        <Button Text="Signaler une coupure" Command="{Binding SignalerCommand}"
+                                IsVisible="{Binding Fiche.PeutSignaler}" />
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10" IsVisible="{Binding Fiche.ACoupure}">
+                            <Button Text="{Binding Fiche.TexteConfirmer}" Style="{StaticResource BoutonDanger}"
+                                    Command="{Binding MoiAussiCommand}" IsVisible="{Binding Fiche.PeutConfirmer}" />
+                            <Button Grid.Column="1" Text="Le courant est revenu" BackgroundColor="{StaticResource VertClair}"
+                                    TextColor="{StaticResource Vert}" Command="{Binding CourantRevenuCommand}"
+                                    IsVisible="{Binding Fiche.PeutRetour}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <Button Text="{Binding Fiche.TexteAbonnement}" Style="{StaticResource BoutonSecondaire}"
+                                    Command="{Binding BasculerAbonnementCommand}" />
+                            <Button Grid.Column="1" Text="Voir l'historique" Style="{StaticResource BoutonSecondaire}"
+                                    Command="{Binding VoirHistoriqueCommand}" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </ScrollView>
+            </Border>
+        </Grid>
+    </Grid>
+</ContentPage>

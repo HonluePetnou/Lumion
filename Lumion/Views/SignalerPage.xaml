@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:c="clr-namespace:Lumion.Controls"
+             xmlns:vm="clr-namespace:Lumion.ViewModels"
+             x:Class="Lumion.Views.SignalerPage"
+             x:DataType="vm:SignalerViewModel"
+             BackgroundColor="{StaticResource Blanc}">
+    <Grid RowDefinitions="Auto,*,Auto">
+        <Grid ColumnDefinitions="48,*,48" Padding="12,8">
+            <Grid BackgroundColor="Transparent" HeightRequest="48" SemanticProperties.Description="Retour">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="Retour" />
+                </Grid.GestureRecognizers>
+                <c:Icone Nom="ChevronGauche" />
+            </Grid>
+            <Label Grid.Column="1" Text="Signaler une coupure" Style="{StaticResource TitreSection}"
+                   HorizontalOptions="Center" VerticalOptions="Center" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16,8,16,16" Spacing="18">
+                <!-- Quartier pré-rempli par le GPS -->
+                <Border Style="{StaticResource Carte}">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12" RowDefinitions="Auto,Auto" RowSpacing="8">
+                        <Border Style="{StaticResource Rond}" BackgroundColor="{StaticResource Fond}" VerticalOptions="Start">
+                            <c:Icone Nom="Epingle" Taille="20" />
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Quartier" Style="{StaticResource Discret}" />
+                            <Label Text="{Binding NomQuartier}" Style="{StaticResource TitreSection}" FontSize="20" />
+                        </VerticalStackLayout>
+                        <Button Grid.Column="2" Text="Modifier" BackgroundColor="{StaticResource BleuClair}"
+                                TextColor="{StaticResource Bleu}" Command="{Binding ChangerQuartierCommand}"
+                                VerticalOptions="Start" />
+                        <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                            <c:Icone Nom="{Binding IconeGps}" Couleur="{Binding CouleurGps}" Taille="18" VerticalOptions="Start" />
+                            <VerticalStackLayout Grid.Column="1">
+                                <Label Text="{Binding EtatGps}" TextColor="{Binding CouleurGps}" FontFamily="OpenSansSemibold" />
+                                <Label Text="{Binding DetailGps}" Style="{StaticResource Discret}" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- Portée -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Portée du signalement" Style="{StaticResource TitreSection}" />
+                    <Label Text="Où observez-vous la coupure ?" Style="{StaticResource SousTitrePage}" />
+                    <Border Style="{StaticResource Carte}" Padding="6">
+                        <c:Choix Options="Mon domicile|Ma rue|Tout le quartier" Valeurs="Domicile|Rue|Quartier"
+                                 Change="EtendueChangee" Etire="True" />
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Commentaire -->
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Détails du signalement" Style="{StaticResource TitreSection}" />
+                    <Label Text="Ajoutez un commentaire (facultatif)." Style="{StaticResource SousTitrePage}" />
+                    <Border Style="{StaticResource Champ}" Padding="12,8">
+                        <Grid RowDefinitions="*,Auto">
+                            <Editor Text="{Binding Commentaire}" MaxLength="200" HeightRequest="110"
+                                    Placeholder="Ex. : Pas d'électricité depuis 2 heures, côté ancien camp."
+                                    SemanticProperties.Description="Commentaire facultatif" />
+                            <Label Grid.Row="1" Text="{Binding Compteur}" Style="{StaticResource Discret}"
+                                   HorizontalOptions="End" />
+                        </Grid>
+                    </Border>
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                        <c:Icone Nom="Info" Taille="16" Couleur="{StaticResource Gris}" VerticalOptions="Start" />
+                        <Label Grid.Column="1" Style="{StaticResource Discret}"
+                               Text="Jusqu'à 200 caractères. Vous pouvez préciser l'heure, une adresse ou tout autre détail utile." />
+                    </Grid>
+                </VerticalStackLayout>
+
+                <!-- Hors ligne -->
+                <Border StrokeThickness="0" StrokeShape="RoundRectangle 18" Padding="14" BackgroundColor="{StaticResource BleuClair}">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Border Style="{StaticResource Rond}" BackgroundColor="{StaticResource Blanc}" VerticalOptions="Start">
+                            <c:Icone Nom="HorsLigne" Taille="20" Couleur="{StaticResource Bleu}" />
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Pas de réseau ? Aucun souci !" Style="{StaticResource TitreElement}" />
+                            <Label FontSize="13"
+                                   Text="Votre signalement sera enregistré et envoyé automatiquement dès que vous serez de nouveau connecté." />
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Grid Grid.Row="2" Padding="16,8,16,16">
+            <Button Text="Envoyer" Command="{Binding EnvoyerCommand}" HeightRequest="56" FontSize="17" />
+            <ActivityIndicator IsRunning="{Binding EnvoiEnCours}" IsVisible="{Binding EnvoiEnCours}"
+                               HorizontalOptions="End" Margin="0,0,20,0" Color="{StaticResource Encre}" />
+        </Grid>
+    </Grid>
+</ContentPage>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:c="clr-namespace:Lumion.Controls"
+             xmlns:vm="clr-namespace:Lumion.ViewModels"
+             x:Class="Lumion.Views.HistoriquePage"
+             x:DataType="vm:HistoriqueViewModel">
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Grid ColumnDefinitions="48,*" Padding="12,8,16,0" BackgroundColor="{StaticResource Blanc}">
+            <Grid BackgroundColor="Transparent" HeightRequest="48" SemanticProperties.Description="Retour">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="Retour" />
+                </Grid.GestureRecognizers>
+                <c:Icone Nom="ChevronGauche" />
+            </Grid>
+            <VerticalStackLayout Grid.Column="1">
+                <Label Text="Historique" Style="{StaticResource TitrePage}" FontSize="22" />
+                <Label Text="{Binding NomQuartier, StringFormat='Coupures passées à {0}'}" Style="{StaticResource SousTitrePage}" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <VerticalStackLayout Grid.Row="1" Padding="16,12,16,8" Spacing="8" BackgroundColor="{StaticResource Blanc}">
+            <c:Choix Options="7 jours|30 jours|Mois choisi" Valeurs="7|30|mois" Selection="{Binding Periode}"
+                     HorizontalOptions="Start" />
+            <Border Style="{StaticResource Champ}" IsVisible="{Binding MoisVisible}">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                    <c:Icone Nom="Calendrier" Taille="20" />
+                    <Picker Grid.Column="1" Title="Mois" ItemsSource="{Binding Mois}" SelectedItem="{Binding MoisChoisi}" />
+                </Grid>
+            </Border>
+        </VerticalStackLayout>
+
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Coupures}" RemainingItemsThreshold="4"
+                        RemainingItemsThresholdReachedCommand="{Binding ChargerSuiteCommand}">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Padding="32,64,32,0" Spacing="8">
+                    <c:Icone Nom="Check" Taille="40" Couleur="{StaticResource Vert}" />
+                    <Label Text="Aucune coupure enregistrée sur cette période" Style="{StaticResource TitreElement}"
+                           HorizontalTextAlignment="Center" />
+                    <Label Text="Essayez une période plus longue ou un autre mois." Style="{StaticResource Discret}"
+                           HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:LigneCoupure">
+                    <Grid Padding="16,6">
+                        <Border Style="{StaticResource Carte}" Padding="14,12">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding OuvrirCommand, Source={RelativeSource AncestorType={x:Type vm:HistoriqueViewModel}}, x:DataType=vm:HistoriqueViewModel}"
+                                    CommandParameter="{Binding Id}" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                <Border Style="{StaticResource Rond}" BackgroundColor="{Binding Couleur}" VerticalOptions="Start">
+                                    <c:Icone Nom="{Binding Icone}" Couleur="{StaticResource Blanc}" Taille="22" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                    <Label Text="{Binding Date}" Style="{StaticResource TitreElement}" />
+                                    <Label Text="{Binding Horaires}" Style="{StaticResource Discret}" />
+                                    <Label Text="{Binding Duree}" FontFamily="OpenSansSemibold" TextColor="{StaticResource Encre}" />
+                                    <HorizontalStackLayout Spacing="8">
+                                        <Border Style="{StaticResource Pastille}" BackgroundColor="{Binding Clair}" Padding="8,3">
+                                            <Label Text="{Binding Type}" TextColor="{Binding Couleur}" FontSize="11"
+                                                   FontFamily="OpenSansSemibold" />
+                                        </Border>
+                                        <Label Text="{Binding Signalements}" Style="{StaticResource Discret}" FontSize="12"
+                                               VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                                <c:Icone Grid.Column="2" Nom="ChevronDroite" Taille="18" Couleur="{StaticResource GrisClair}" />
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

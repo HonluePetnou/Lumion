@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:c="clr-namespace:Lumion.Controls"
+             xmlns:vm="clr-namespace:Lumion.ViewModels"
+             x:Class="Lumion.Views.StatistiquesPage"
+             x:DataType="vm:StatistiquesViewModel">
+    <Grid RowDefinitions="Auto,*">
+        <c:EnTete BackgroundColor="{StaticResource Blanc}" />
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16,12,16,24" Spacing="14">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Statistiques" Style="{StaticResource TitrePage}" />
+                    <Label Text="Analysez les coupures d'électricité à Douala" Style="{StaticResource SousTitrePage}" />
+                </VerticalStackLayout>
+
+                <!-- Sélecteurs mois et quartier -->
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <Border Style="{StaticResource Champ}">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                            <c:Icone Nom="Calendrier" Taille="20" />
+                            <Picker Grid.Column="1" Title="Mois" ItemsSource="{Binding Mois}" SelectedItem="{Binding MoisChoisi}"
+                                    SemanticProperties.Description="Mois" />
+                        </Grid>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource Champ}">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                            <c:Icone Nom="Epingle" Taille="20" />
+                            <Picker Grid.Column="1" Title="Quartier" ItemsSource="{Binding Quartiers}"
+                                    SelectedItem="{Binding QuartierChoisi}" SemanticProperties.Description="Quartier" />
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <Border Style="{StaticResource Pastille}" BackgroundColor="{StaticResource PrimaireClair}"
+                        HorizontalOptions="Start" IsVisible="{Binding Provisoire}">
+                    <HorizontalStackLayout Spacing="6">
+                        <c:Icone Nom="Info" Taille="14" Couleur="{StaticResource PrimaireFonce}" />
+                        <Label Text="Chiffres provisoires : le mois est en cours" FontSize="12"
+                               TextColor="{StaticResource PrimaireFonce}" FontFamily="OpenSansSemibold" />
+                    </HorizontalStackLayout>
+                </Border>
+
+                <!-- État vide -->
+                <Border Style="{StaticResource Carte}" Padding="24" IsVisible="{Binding AucuneDonnee}">
+                    <VerticalStackLayout Spacing="8">
+                        <c:Icone Nom="Stats" Taille="36" Couleur="{StaticResource GrisClair}" />
+                        <Label Text="Pas encore de données pour ce mois" Style="{StaticResource TitreElement}"
+                               HorizontalTextAlignment="Center" />
+                        <Label Text="Aucune coupure terminée n'a été enregistrée pour ce quartier sur ce mois."
+                               Style="{StaticResource Discret}" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Quatre indicateurs -->
+                <FlexLayout BindableLayout.ItemsSource="{Binding Indicateurs}" Wrap="Wrap" JustifyContent="SpaceBetween"
+                            IsVisible="{Binding AvecDonnees}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:Indicateur">
+                            <Border FlexLayout.Basis="48.5%" Margin="0,0,0,10" StrokeThickness="0" StrokeShape="RoundRectangle 18"
+                                    Padding="12" BackgroundColor="{Binding Clair}">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                    <Border Style="{StaticResource Rond}" WidthRequest="38" HeightRequest="38"
+                                            BackgroundColor="{Binding Couleur}" VerticalOptions="Start">
+                                        <c:Icone Nom="{Binding Icone}" Couleur="{StaticResource Blanc}" Taille="18" />
+                                    </Border>
+                                    <VerticalStackLayout Grid.Column="1">
+                                        <Label Text="{Binding Libelle}" FontSize="12" />
+                                        <Label Text="{Binding Valeur}" Style="{StaticResource Chiffre}" FontSize="20"
+                                               LineBreakMode="NoWrap" />
+                                        <Label Text="{Binding Variation}" TextColor="{Binding CouleurVariation}"
+                                               FontFamily="OpenSansSemibold" FontSize="12" />
+                                        <Label Text="{Binding Comparaison}" Style="{StaticResource Discret}" FontSize="11" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
+
+                <!-- Évolution sur 12 mois -->
+                <Border Style="{StaticResource Carte}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Évolution sur 12 mois" Style="{StaticResource TitreSection}" />
+                        <HorizontalStackLayout Spacing="14">
+                            <HorizontalStackLayout Spacing="6">
+                                <Ellipse WidthRequest="10" HeightRequest="10" Fill="{StaticResource Bleu}" VerticalOptions="Center" />
+                                <Label Text="Nombre de coupures" FontSize="12" />
+                            </HorizontalStackLayout>
+                            <HorizontalStackLayout Spacing="6">
+                                <Ellipse WidthRequest="10" HeightRequest="10" Fill="{StaticResource Primaire}" VerticalOptions="Center" />
+                                <Label Text="Durée totale (h)" FontSize="12" />
+                            </HorizontalStackLayout>
+                        </HorizontalStackLayout>
+                        <GraphicsView x:Name="Evolution" HeightRequest="190"
+                                      SemanticProperties.Description="Graphique d'évolution des coupures sur 12 mois" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Répartition horaire -->
+                <Border Style="{StaticResource Carte}" IsVisible="{Binding AvecDonnees}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Répartition des coupures par heure" Style="{StaticResource TitreSection}" />
+                        <GraphicsView x:Name="Horaire" HeightRequest="150"
+                                      SemanticProperties.Description="Répartition des coupures par heure de la journée" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Classement des quartiers -->
+                <Border Style="{StaticResource Carte}">
+                    <VerticalStackLayout Spacing="10">
+                        <VerticalStackLayout>
+                            <Label Text="Quartiers les plus affectés" Style="{StaticResource TitreSection}" />
+                            <Label Text="{Binding TitreClassement}" Style="{StaticResource Discret}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Classement}" Spacing="10">
+                            <BindableLayout.EmptyView>
+                                <Label Text="Aucune coupure terminée ce mois-ci." Style="{StaticResource Discret}" />
+                            </BindableLayout.EmptyView>
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="vm:RangQuartier">
+                                    <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="4">
+                                        <Border Grid.RowSpan="2" Style="{StaticResource Rond}" WidthRequest="26" HeightRequest="26"
+                                                BackgroundColor="{Binding Couleur}">
+                                            <Label Text="{Binding Rang}" TextColor="{StaticResource Blanc}" FontSize="12"
+                                                   FontFamily="OpenSansSemibold" HorizontalOptions="Center" VerticalOptions="Center" />
+                                        </Border>
+                                        <Label Grid.Column="1" Text="{Binding Nom}" Style="{StaticResource TitreElement}" FontSize="14" />
+                                        <Label Grid.Column="2" Text="{Binding Valeur}" Style="{StaticResource TitreElement}" FontSize="14" />
+                                        <ProgressBar Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Progress="{Binding Part}"
+                                                     ProgressColor="{Binding Couleur}" HeightRequest="6" />
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                        <Button Text="{Binding LibelleClassement}" Style="{StaticResource BoutonLien}" HorizontalOptions="Start"
+                                Command="{Binding BasculerClassementCommand}" IsVisible="{Binding ClassementLong}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Comparaison de deux quartiers -->
+                <Border Style="{StaticResource Carte}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Comparer deux quartiers" Style="{StaticResource TitreSection}" />
+                        <Border Style="{StaticResource Champ}" BackgroundColor="{StaticResource Fond}">
+                            <Picker Title="Comparer avec" ItemsSource="{Binding Comparaisons}"
+                                    SelectedItem="{Binding ComparaisonChoisie}"
+                                    SemanticProperties.Description="Quartier à comparer" />
+                        </Border>
+                        <Grid ColumnDefinitions="*,*,*" IsVisible="{Binding ComparaisonVisible}">
+                            <Label Grid.Column="1" Text="{Binding EnTeteA}" Style="{StaticResource TitreElement}" FontSize="13" />
+                            <Label Grid.Column="2" Text="{Binding EnTeteB}" Style="{StaticResource TitreElement}" FontSize="13" />
+                        </Grid>
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Comparaison}" Spacing="8"
+                                             IsVisible="{Binding ComparaisonVisible}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="vm:LigneComparaison">
+                                    <Grid ColumnDefinitions="*,*,*">
+                                        <Label Text="{Binding Libelle}" Style="{StaticResource Discret}" />
+                                        <Label Grid.Column="1" Text="{Binding A}" />
+                                        <Label Grid.Column="2" Text="{Binding B}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

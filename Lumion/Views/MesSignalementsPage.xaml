@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:c="clr-namespace:Lumion.Controls"
+             xmlns:vm="clr-namespace:Lumion.ViewModels"
+             x:Class="Lumion.Views.MesSignalementsPage"
+             x:DataType="vm:MesSignalementsViewModel">
+    <Grid RowDefinitions="Auto,Auto,*">
+        <c:EnTete BackgroundColor="{StaticResource Blanc}" />
+
+        <VerticalStackLayout Grid.Row="1" Padding="16,12,0,8" Spacing="10" BackgroundColor="{StaticResource Blanc}">
+            <VerticalStackLayout Spacing="2">
+                <Label Text="Mes signalements" Style="{StaticResource TitrePage}" />
+                <Label Text="Suivez l'état de vos contributions à Douala." Style="{StaticResource SousTitrePage}" />
+            </VerticalStackLayout>
+            <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never"
+                        IsVisible="{Binding Session.EstConnecte}">
+                <c:Choix Options="Tous|En cours|Validés|Rejetés|Annulés" Selection="{Binding Filtre}" Margin="0,0,16,0" />
+            </ScrollView>
+            <Border Style="{StaticResource Pastille}" BackgroundColor="{StaticResource BleuClair}" HorizontalOptions="Start"
+                    IsVisible="{Binding EnAttenteVisible}">
+                <HorizontalStackLayout Spacing="6">
+                    <c:Icone Nom="HorsLigne" Taille="14" Couleur="{StaticResource Bleu}" />
+                    <Label Text="{Binding MentionEnAttente}" FontSize="12" TextColor="{StaticResource Bleu}" />
+                </HorizontalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+
+        <!-- Visiteur : l'historique personnel demande un compte -->
+        <VerticalStackLayout Grid.Row="2" Padding="32,48,32,0" Spacing="12" IsVisible="{Binding Session.EstVisiteur}">
+            <c:Icone Nom="Document" Taille="44" Couleur="{StaticResource GrisClair}" />
+            <Label Text="Connectez-vous pour suivre vos signalements" Style="{StaticResource TitreElement}"
+                   HorizontalTextAlignment="Center" />
+            <Label Text="Sans compte, la carte et les statistiques restent consultables." Style="{StaticResource Discret}"
+                   HorizontalTextAlignment="Center" />
+            <Button Text="Se connecter" Command="{Binding SeConnecterCommand}" />
+        </VerticalStackLayout>
+
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Signalements}" IsVisible="{Binding Session.EstConnecte}">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Padding="32,48,32,0" Spacing="8">
+                    <c:Icone Nom="Document" Taille="44" Couleur="{StaticResource GrisClair}" />
+                    <Label Text="{Binding TitreVide}" Style="{StaticResource TitreElement}" HorizontalTextAlignment="Center" />
+                    <Label Text="{Binding TexteVide}" Style="{StaticResource Discret}" HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:LigneSignalement">
+                    <Grid Padding="16,6">
+                        <Border Style="{StaticResource Carte}" Padding="14,12">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding OuvrirCommand, Source={RelativeSource AncestorType={x:Type vm:MesSignalementsViewModel}}, x:DataType=vm:MesSignalementsViewModel}"
+                                    CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                <Border Style="{StaticResource Rond}" WidthRequest="48" HeightRequest="48"
+                                        BackgroundColor="{Binding Couleur}" VerticalOptions="Start">
+                                    <c:Icone Nom="{Binding Icone}" Couleur="{StaticResource Blanc}" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                    <Label Text="{Binding Titre}" Style="{StaticResource TitreElement}" />
+                                    <HorizontalStackLayout Spacing="6">
+                                        <c:Icone Nom="Epingle" Taille="14" Couleur="{StaticResource Gris}" />
+                                        <Label Text="{Binding Quartier}" FontSize="13" />
+                                    </HorizontalStackLayout>
+                                    <HorizontalStackLayout Spacing="6">
+                                        <c:Icone Nom="Calendrier" Taille="14" Couleur="{StaticResource Gris}" />
+                                        <Label Text="{Binding Date}" Style="{StaticResource Discret}" />
+                                    </HorizontalStackLayout>
+                                    <Label Text="{Binding Commentaire}" Style="{StaticResource Discret}"
+                                           IsVisible="{Binding ACommentaire}" />
+                                    <Border Style="{StaticResource Pastille}" BackgroundColor="{StaticResource RougeClair}"
+                                            HorizontalOptions="Start" Padding="8,3" IsVisible="{Binding Annulable}">
+                                        <Label Text="{Binding Reste}" TextColor="{StaticResource Rouge}" FontSize="11"
+                                               FontFamily="OpenSansSemibold" />
+                                    </Border>
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="2" Spacing="8">
+                                    <Border Style="{StaticResource Pastille}" BackgroundColor="{Binding ClairStatut}"
+                                            HorizontalOptions="End">
+                                        <HorizontalStackLayout Spacing="5">
+                                            <c:Icone Nom="{Binding IconeStatut}" Taille="14" Couleur="{Binding CouleurStatut}" />
+                                            <Label Text="{Binding Statut}" TextColor="{Binding CouleurStatut}" FontSize="12"
+                                                   FontFamily="OpenSansSemibold" />
+                                        </HorizontalStackLayout>
+                                    </Border>
+                                    <Button Text="Annuler" BackgroundColor="{StaticResource Blanc}"
+                                            TextColor="{StaticResource Rouge}" BorderColor="{StaticResource Rouge}"
+                                            BorderWidth="1.5" IsVisible="{Binding Annulable}"
+                                            Command="{Binding AnnulerCommand, Source={RelativeSource AncestorType={x:Type vm:MesSignalementsViewModel}}, x:DataType=vm:MesSignalementsViewModel}"
+                                            CommandParameter="{Binding .}" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

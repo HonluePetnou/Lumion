@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:c="clr-namespace:Lumion.Controls"
+             xmlns:vm="clr-namespace:Lumion.ViewModels"
+             x:Class="Lumion.Views.ProfilPage"
+             x:DataType="vm:ProfilViewModel">
+    <Grid RowDefinitions="Auto,*">
+        <c:EnTete BackgroundColor="{StaticResource Blanc}" />
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16,12,16,24" Spacing="14">
+                <Label Text="Profil et paramètres" Style="{StaticResource TitrePage}" />
+
+                <!-- Visiteur -->
+                <Border Style="{StaticResource Carte}" Padding="24" IsVisible="{Binding Session.EstVisiteur}">
+                    <VerticalStackLayout Spacing="12">
+                        <c:Icone Nom="Profil" Taille="44" Couleur="{StaticResource GrisClair}" />
+                        <Label Text="Vous consultez Lumion sans compte" Style="{StaticResource TitreElement}"
+                               HorizontalTextAlignment="Center" />
+                        <Label Style="{StaticResource Discret}" HorizontalTextAlignment="Center"
+                               Text="Créez un compte pour signaler une coupure, confirmer celles de vos voisins et être prévenu dans votre quartier." />
+                        <Button Text="Se connecter ou créer un compte" Command="{Binding SeConnecterCommand}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <VerticalStackLayout Spacing="14" IsVisible="{Binding Session.EstConnecte}">
+                    <!-- Identité -->
+                    <Border Style="{StaticResource Carte}">
+                        <VerticalStackLayout Spacing="12">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Style="{StaticResource Rond}" WidthRequest="72" HeightRequest="72"
+                                        BackgroundColor="{StaticResource PrimaireClair}">
+                                    <Label Text="{Binding Initiales}" FontFamily="OpenSansSemibold" FontSize="26"
+                                           TextColor="{StaticResource PrimaireFonce}" HorizontalOptions="Center"
+                                           VerticalOptions="Center" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="3">
+                                    <Label Text="{Binding Nom}" Style="{StaticResource TitreSection}" />
+                                    <HorizontalStackLayout Spacing="6">
+                                        <c:Icone Nom="Epingle" Taille="14" Couleur="{StaticResource Gris}" />
+                                        <Label Text="{Binding Lieu}" FontSize="13" />
+                                    </HorizontalStackLayout>
+                                    <HorizontalStackLayout Spacing="6">
+                                        <c:Icone Nom="Telephone" Taille="14" Couleur="{StaticResource Gris}" />
+                                        <Label Text="{Binding Telephone}" FontSize="13" />
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                                <Button Grid.Column="2" Text="Modifier" Style="{StaticResource BoutonSecondaire}"
+                                        Command="{Binding ModifierCommand}" VerticalOptions="Start" />
+                            </Grid>
+                            <Border StrokeThickness="0" StrokeShape="RoundRectangle 14" Padding="12,10"
+                                    BackgroundColor="{StaticResource PrimaireClair}">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                    <c:Icone Nom="Bouclier" Taille="20" Couleur="{StaticResource PrimaireFonce}" />
+                                    <VerticalStackLayout Grid.Column="1">
+                                        <Label Text="Membre Lumion" Style="{StaticResource TitreElement}" FontSize="14" />
+                                        <Label Text="{Binding Role}" Style="{StaticResource Discret}" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Border>
+                            <Border StrokeThickness="0" StrokeShape="RoundRectangle 14" Padding="12,10"
+                                    BackgroundColor="{StaticResource RougeClair}" IsVisible="{Binding Suspendu}">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                    <c:Icone Nom="Alerte" Taille="20" Couleur="{StaticResource Rouge}" />
+                                    <Label Grid.Column="1" Text="{Binding MentionSuspension}" TextColor="{StaticResource Rouge}"
+                                           FontSize="13" />
+                                </Grid>
+                            </Border>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Abonnements -->
+                    <Border Style="{StaticResource Carte}">
+                        <VerticalStackLayout Spacing="12">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                <Border Style="{StaticResource Rond}" BackgroundColor="{StaticResource PrimaireClair}">
+                                    <c:Icone Nom="Epingle" Taille="20" Couleur="{StaticResource PrimaireFonce}" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                    <Label Text="Mes quartiers abonnés" Style="{StaticResource TitreElement}" />
+                                    <Label Text="Recevez les alertes de vos quartiers (5 au maximum)" Style="{StaticResource Discret}" />
+                                </VerticalStackLayout>
+                            </Grid>
+                            <FlexLayout BindableLayout.ItemsSource="{Binding Abonnements}" Wrap="Wrap">
+                                <BindableLayout.EmptyView>
+                                    <Label Text="Vous ne suivez aucun quartier pour l'instant." Style="{StaticResource Discret}" />
+                                </BindableLayout.EmptyView>
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:PuceAbonnement">
+                                        <Border Style="{StaticResource Pastille}" BackgroundColor="{StaticResource VertClair}"
+                                                Padding="12,0" HeightRequest="40" Margin="0,0,8,8">
+                                            <Border.GestureRecognizers>
+                                                <TapGestureRecognizer
+                                                    Command="{Binding ReglerAbonnementCommand, Source={RelativeSource AncestorType={x:Type vm:ProfilViewModel}}, x:DataType=vm:ProfilViewModel}"
+                                                    CommandParameter="{Binding .}" />
+                                            </Border.GestureRecognizers>
+                                            <HorizontalStackLayout Spacing="6">
+                                                <c:Icone Nom="Check" Taille="14" Couleur="{StaticResource Vert}" />
+                                                <Label Text="{Binding Nom}" FontFamily="OpenSansSemibold" FontSize="13"
+                                                       TextColor="{StaticResource Encre}" VerticalOptions="Center" />
+                                            </HorizontalStackLayout>
+                                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </FlexLayout>
+                            <Button Text="Suivre un autre quartier" Style="{StaticResource BoutonSecondaire}"
+                                    Command="{Binding AjouterAbonnementCommand}" IsEnabled="{Binding PeutAjouter}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Notifications et heures silencieuses -->
+                    <Border Style="{StaticResource Carte}">
+                        <VerticalStackLayout Spacing="12">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                <Border Style="{StaticResource Rond}" BackgroundColor="{StaticResource BleuClair}">
+                                    <c:Icone Nom="Cloche" Taille="20" Couleur="{StaticResource Bleu}" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                    <Label Text="Notifications" Style="{StaticResource TitreElement}" />
+                                    <Label Text="Recevoir les alertes et informations" Style="{StaticResource Discret}" />
+                                </VerticalStackLayout>
+                                <Switch Grid.Column="2" IsToggled="{Binding NotificationsActives}" VerticalOptions="Center"
+                                        SemanticProperties.Description="Activer les notifications" />
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{StaticResource Bordure}" />
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                <Border Style="{StaticResource Rond}" BackgroundColor="{StaticResource VioletClair}">
+                                    <c:Icone Nom="Lune" Taille="20" Couleur="{StaticResource Violet}" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                    <Label Text="Heures silencieuses" Style="{StaticResource TitreElement}" />
+                                    <Label Text="Aucune notification pendant cette période" Style="{StaticResource Discret}" />
+                                </VerticalStackLayout>
+                                <Switch Grid.Column="2" IsToggled="{Binding SilenceActif}" VerticalOptions="Center"
+                                        SemanticProperties.Description="Activer les heures silencieuses" />
+                            </Grid>
+                            <Border Style="{StaticResource Champ}" IsEnabled="{Binding SilenceActif}">
+                                <HorizontalStackLayout Spacing="8">
+                                    <c:Icone Nom="Horloge" Taille="20" />
+                                    <Label Text="De" VerticalOptions="Center" />
+                                    <TimePicker Time="{Binding SilenceDebut}" Format="HH:mm" TextColor="{StaticResource Encre}"
+                                                FontFamily="OpenSansSemibold" SemanticProperties.Description="Début des heures silencieuses" />
+                                    <Label Text="à" VerticalOptions="Center" />
+                                    <TimePicker Time="{Binding SilenceFin}" Format="HH:mm" TextColor="{StaticResource Encre}"
+                                                FontFamily="OpenSansSemibold" SemanticProperties.Description="Fin des heures silencieuses" />
+                                </HorizontalStackLayout>
+                            </Border>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Langue -->
+                    <Border Style="{StaticResource Carte}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding LangueCommand}" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
+                            <Border Style="{StaticResource Rond}" BackgroundColor="{StaticResource BleuClair}">
+                                <c:Icone Nom="Globe" Taille="20" Couleur="{StaticResource Bleu}" />
+                            </Border>
+                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                <Label Text="Langue" Style="{StaticResource TitreElement}" />
+                                <Label Text="Choisir la langue de l'application" Style="{StaticResource Discret}" />
+                            </VerticalStackLayout>
+                            <Label Grid.Column="2" Text="Français" VerticalOptions="Center" />
+                            <c:Icone Grid.Column="3" Nom="ChevronDroite" Taille="18" Couleur="{StaticResource GrisClair}" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Accès réservés aux rôles concernés -->
+                    <Border Style="{StaticResource Carte}" IsVisible="{Binding Session.EstModerateur}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ModerationCommand}" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                            <Border Style="{StaticResource Rond}" BackgroundColor="{StaticResource VertClair}">
+                                <c:Icone Nom="Bouclier" Taille="20" Couleur="{StaticResource Vert}" />
+                            </Border>
+                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                <Label Text="Modération" Style="{StaticResource TitreElement}" />
+                                <Label Text="Vérifier et valider les signalements" Style="{StaticResource Discret}" />
+                            </VerticalStackLayout>
+                            <c:Icone Grid.Column="2" Nom="ChevronDroite" Taille="18" Couleur="{StaticResource GrisClair}" />
+                        </Grid>
+                    </Border>
+                    <Border Style="{StaticResource Carte}" IsVisible="{Binding Session.EstAdmin}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding AdministrationCommand}" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                            <Border Style="{StaticResource Rond}" BackgroundColor="{StaticResource PrimaireClair}">
+                                <c:Icone Nom="Reglages" Taille="20" Couleur="{StaticResource PrimaireFonce}" />
+                            </Border>
+                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                <Label Text="Administration" Style="{StaticResource TitreElement}" />
+                                <Label Text="Quartiers, utilisateurs et délestages" Style="{StaticResource Discret}" />
+                            </VerticalStackLayout>
+                            <c:Icone Grid.Column="2" Nom="ChevronDroite" Taille="18" Couleur="{StaticResource GrisClair}" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Déconnexion -->
+                    <Border Style="{StaticResource Carte}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding DeconnecterCommand}" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                            <Border Style="{StaticResource Rond}" BackgroundColor="{StaticResource RougeClair}">
+                                <c:Icone Nom="Sortie" Taille="20" Couleur="{StaticResource Rouge}" />
+                            </Border>
+                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                <Label Text="Se déconnecter" Style="{StaticResource TitreElement}" TextColor="{StaticResource Rouge}" />
+                                <Label Text="Quitter votre compte Lumion" Style="{StaticResource Discret}" />
+                            </VerticalStackLayout>
+                            <c:Icone Grid.Column="2" Nom="ChevronDroite" Taille="18" Couleur="{StaticResource GrisClair}" />
+                        </Grid>
+                    </Border>
+                    <Button Text="Supprimer mon compte" Style="{StaticResource BoutonLien}" TextColor="{StaticResource Rouge}"
+                            Command="{Binding SupprimerCompteCommand}" />
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:c="clr-namespace:Lumion.Controls"
+             xmlns:vm="clr-namespace:Lumion.ViewModels"
+             x:Class="Lumion.Views.AdministrationPage"
+             x:DataType="vm:AdministrationViewModel">
+    <Grid RowDefinitions="Auto,*">
+        <Grid ColumnDefinitions="48,*" Padding="12,8,16,8" BackgroundColor="{StaticResource Blanc}">
+            <Grid BackgroundColor="Transparent" HeightRequest="48" SemanticProperties.Description="Retour">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="Retour" />
+                </Grid.GestureRecognizers>
+                <c:Icone Nom="ChevronGauche" />
+            </Grid>
+            <VerticalStackLayout Grid.Column="1">
+                <Label Text="Administration" Style="{StaticResource TitrePage}" FontSize="24" />
+                <Label Text="Gérez les quartiers, utilisateurs et délestages" Style="{StaticResource SousTitrePage}" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16,12,16,24" Spacing="14">
+                <!-- Onglets -->
+                <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                    <c:Choix Options="Quartiers|Utilisateurs|Délestages|Export" Selection="{Binding Onglet}" />
+                </ScrollView>
+
+                <!-- Indicateurs -->
+                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
+                    <Border StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="10" BackgroundColor="{StaticResource VertClair}">
+                        <VerticalStackLayout Spacing="2">
+                            <c:Icone Nom="Carte" Taille="18" Couleur="{StaticResource Vert}" HorizontalOptions="Start" />
+                            <Label Text="{Binding NbQuartiers}" Style="{StaticResource Chiffre}" />
+                            <Label Text="Quartiers activés" FontSize="11" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="1" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="10"
+                            BackgroundColor="{StaticResource BleuClair}">
+                        <VerticalStackLayout Spacing="2">
+                            <c:Icone Nom="Personnes" Taille="18" Couleur="{StaticResource Bleu}" HorizontalOptions="Start" />
+                            <Label Text="{Binding NbUtilisateurs}" Style="{StaticResource Chiffre}" />
+                            <Label Text="Utilisateurs actifs" FontSize="11" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="2" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="10"
+                            BackgroundColor="{StaticResource PrimaireClair}">
+                        <VerticalStackLayout Spacing="2">
+                            <c:Icone Nom="Eclair" Taille="18" Couleur="{StaticResource PrimaireFonce}" HorizontalOptions="Start" />
+                            <Label Text="{Binding NbProgrammes}" Style="{StaticResource Chiffre}" />
+                            <Label Text="Délestages programmés" FontSize="11" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="3" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="10"
+                            BackgroundColor="{StaticResource RougeClair}">
+                        <VerticalStackLayout Spacing="2">
+                            <c:Icone Nom="Alerte" Taille="18" Couleur="{StaticResource Rouge}" HorizontalOptions="Start" />
+                            <Label Text="{Binding NbEnCours}" Style="{StaticResource Chiffre}" TextColor="{StaticResource Rouge}" />
+                            <Label Text="Délestage en cours" FontSize="11" TextColor="{StaticResource Rouge}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <!-- Quartiers -->
+                <Border Style="{StaticResource Carte}" IsVisible="{Binding OngletQuartiers}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Quartiers" Style="{StaticResource TitreSection}" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Quartiers}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="vm:LigneQuartierAdmin">
+                                    <Grid ColumnDefinitions="Auto,*,48" ColumnSpacing="12" MinimumHeightRequest="56">
+                                        <Border Style="{StaticResource Rond}" WidthRequest="30" HeightRequest="30"
+                                                BackgroundColor="{Binding Couleur}">
+                                            <c:Icone Nom="{Binding Icone}" Taille="16" Couleur="{StaticResource Blanc}" />
+                                        </Border>
+                                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                            <Label Text="{Binding Quartier.Nom}" Style="{StaticResource TitreElement}" />
+                                            <Label Text="{Binding Detail}" Style="{StaticResource Discret}" />
+                                        </VerticalStackLayout>
+                                        <Grid Grid.Column="2" BackgroundColor="Transparent"
+                                              SemanticProperties.Description="Actions sur le quartier">
+                                            <Grid.GestureRecognizers>
+                                                <TapGestureRecognizer
+                                                    Command="{Binding ActionsQuartierCommand, Source={RelativeSource AncestorType={x:Type vm:AdministrationViewModel}}, x:DataType=vm:AdministrationViewModel}"
+                                                    CommandParameter="{Binding .}" />
+                                            </Grid.GestureRecognizers>
+                                            <c:Icone Nom="Points" />
+                                        </Grid>
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                        <Button Text="Ajouter un quartier" BackgroundColor="{StaticResource PrimaireClair}"
+                                TextColor="{StaticResource PrimaireFonce}" Command="{Binding AjouterQuartierCommand}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Utilisateurs -->
+                <Border Style="{StaticResource Carte}" IsVisible="{Binding OngletUtilisateurs}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Utilisateurs" Style="{StaticResource TitreSection}" />
+                        <Border Style="{StaticResource Champ}" BackgroundColor="{StaticResource Fond}">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <c:Icone Nom="Recherche" Taille="20" Couleur="{StaticResource Gris}" />
+                                <Entry Grid.Column="1" Text="{Binding Recherche}" Placeholder="Nom ou numéro"
+                                       SemanticProperties.Description="Rechercher un utilisateur" />
+                            </Grid>
+                        </Border>
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Utilisateurs}">
+                            <BindableLayout.EmptyView>
+                                <Label Text="Aucun utilisateur ne correspond à la recherche." Style="{StaticResource Discret}"
+                                       Padding="0,12" />
+                            </BindableLayout.EmptyView>
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="vm:LigneUtilisateur">
+                                    <Grid ColumnDefinitions="Auto,*,Auto,48" ColumnSpacing="10" MinimumHeightRequest="60">
+                                        <Border Style="{StaticResource Rond}" BackgroundColor="{Binding Clair}">
+                                            <Label Text="{Binding Initiales}" TextColor="{Binding Couleur}" FontFamily="OpenSansSemibold"
+                                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                                        </Border>
+                                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                            <Label Text="{Binding Utilisateur.NomAffichage}" Style="{StaticResource TitreElement}"
+                                                   LineBreakMode="TailTruncation" />
+                                            <Label Text="{Binding Contact}" Style="{StaticResource Discret}" FontSize="12" />
+                                        </VerticalStackLayout>
+                                        <Border Grid.Column="2" Style="{StaticResource Pastille}" BackgroundColor="{Binding ClairRole}">
+                                            <Label Text="{Binding Role}" TextColor="{Binding CouleurRole}" FontSize="12"
+                                                   FontFamily="OpenSansSemibold" />
+                                        </Border>
+                                        <Grid Grid.Column="3" BackgroundColor="Transparent"
+                                              SemanticProperties.Description="Actions sur l'utilisateur">
+                                            <Grid.GestureRecognizers>
+                                                <TapGestureRecognizer
+                                                    Command="{Binding ActionsUtilisateurCommand, Source={RelativeSource AncestorType={x:Type vm:AdministrationViewModel}}, x:DataType=vm:AdministrationViewModel}"
+                                                    CommandParameter="{Binding .}" />
+                                            </Grid.GestureRecognizers>
+                                            <c:Icone Nom="Points" />
+                                        </Grid>
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Délestages -->
+                <VerticalStackLayout Spacing="14" IsVisible="{Binding OngletDelestages}">
+                    <Border Style="{StaticResource Carte}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Publier une annonce de délestage" Style="{StaticResource TitreSection}" />
+                            <Border Style="{StaticResource Champ}" BackgroundColor="{StaticResource Fond}">
+                                <Picker Title="Quartier concerné" ItemsSource="{Binding NomsQuartiers}"
+                                        SelectedItem="{Binding QuartierDelestage}" />
+                            </Border>
+                            <Border Style="{StaticResource Champ}" BackgroundColor="{StaticResource Fond}">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                    <c:Icone Nom="Calendrier" Taille="20" />
+                                    <DatePicker Grid.Column="1" Date="{Binding DateDelestage}" MinimumDate="{Binding DateMin}"
+                                                Format="dddd d MMMM yyyy" TextColor="{StaticResource Encre}" />
+                                </Grid>
+                            </Border>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                <Border Style="{StaticResource Champ}" BackgroundColor="{StaticResource Fond}">
+                                    <HorizontalStackLayout Spacing="8">
+                                        <Label Text="Début" Style="{StaticResource Discret}" VerticalOptions="Center" />
+                                        <TimePicker Time="{Binding HeureDebut}" Format="HH:mm" TextColor="{StaticResource Encre}" />
+                                    </HorizontalStackLayout>
+                                </Border>
+                                <Border Grid.Column="1" Style="{StaticResource Champ}" BackgroundColor="{StaticResource Fond}">
+                                    <HorizontalStackLayout Spacing="8">
+                                        <Label Text="Fin" Style="{StaticResource Discret}" VerticalOptions="Center" />
+                                        <TimePicker Time="{Binding HeureFin}" Format="HH:mm" TextColor="{StaticResource Encre}" />
+                                    </HorizontalStackLayout>
+                                </Border>
+                            </Grid>
+                            <Border Style="{StaticResource Champ}" BackgroundColor="{StaticResource Fond}">
+                                <Entry Text="{Binding Source}" Placeholder="Source (ex. communiqué du fournisseur)" MaxLength="80" />
+                            </Border>
+                            <Button Text="Publier et notifier les abonnés" Command="{Binding PublierCommand}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Style="{StaticResource Carte}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Annonces" Style="{StaticResource TitreSection}" />
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Annonces}" Spacing="12">
+                                <BindableLayout.EmptyView>
+                                    <Label Text="Aucune annonce de délestage." Style="{StaticResource Discret}" />
+                                </BindableLayout.EmptyView>
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:LigneAnnonce">
+                                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="4">
+                                            <VerticalStackLayout>
+                                                <Label Text="{Binding Titre}" Style="{StaticResource TitreElement}" />
+                                                <Label Text="{Binding Detail}" Style="{StaticResource Discret}" FontSize="12" />
+                                            </VerticalStackLayout>
+                                            <Border Grid.Column="1" Style="{StaticResource Pastille}" BackgroundColor="{Binding Clair}"
+                                                    VerticalOptions="Start">
+                                                <Label Text="{Binding Statut}" TextColor="{Binding Couleur}" FontSize="12"
+                                                       FontFamily="OpenSansSemibold" />
+                                            </Border>
+                                            <Button Grid.Row="1" Grid.ColumnSpan="2" Text="Annuler ce délestage"
+                                                    Style="{StaticResource BoutonLien}" TextColor="{StaticResource Rouge}"
+                                                    HorizontalOptions="Start" IsVisible="{Binding Annulable}"
+                                                    Command="{Binding AnnulerAnnonceCommand, Source={RelativeSource AncestorType={x:Type vm:AdministrationViewModel}}, x:DataType=vm:AdministrationViewModel}"
+                                                    CommandParameter="{Binding .}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Export et outils de démonstration -->
+                <VerticalStackLayout Spacing="14" IsVisible="{Binding OngletExport}">
+                    <Border Style="{StaticResource Carte}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Exporter les statistiques" Style="{StaticResource TitreSection}" />
+                            <Label Style="{StaticResource Discret}"
+                                   Text="Fichier CSV : une ligne par coupure, puis un récapitulatif mensuel par quartier." />
+                            <Border Style="{StaticResource Champ}" BackgroundColor="{StaticResource Fond}">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                    <c:Icone Nom="Calendrier" Taille="20" />
+                                    <Picker Grid.Column="1" Title="Mois" ItemsSource="{Binding Mois}" SelectedItem="{Binding MoisExport}" />
+                                </Grid>
+                            </Border>
+                            <Button Text="Générer et partager le CSV" Command="{Binding ExporterCommand}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Style="{StaticResource Carte}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Outils de démonstration" Style="{StaticResource TitreSection}" />
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <VerticalStackLayout>
+                                    <Label Text="Vérification GPS stricte (RG08)" Style="{StaticResource TitreElement}" />
+                                    <Label Style="{StaticResource Discret}"
+                                           Text="Un signalement fait hors du quartier choisi ne compte qu'après validation." />
+                                </VerticalStackLayout>
+                                <Switch Grid.Column="1" IsToggled="{Binding GpsStrict}" VerticalOptions="Center"
+                                        SemanticProperties.Description="Vérification GPS stricte" />
+                            </Grid>
+                            <Button Text="Simuler 2 signalements de voisins" Style="{StaticResource BoutonSecondaire}"
+                                    Command="{Binding SimulerVoisinsCommand}" />
+                            <Button Text="Réinitialiser les données de démonstration" Style="{StaticResource BoutonLien}"
+                                    TextColor="{StaticResource Rouge}" Command="{Binding ReinitialiserCommand}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>
