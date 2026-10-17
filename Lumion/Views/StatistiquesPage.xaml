@@ -5,7 +5,7 @@
              xmlns:vm="clr-namespace:Lumion.ViewModels"
              x:Class="Lumion.Views.StatistiquesPage"
              x:DataType="vm:StatistiquesViewModel">
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,*,Auto">
         <c:EnTete BackgroundColor="{StaticResource Blanc}" />
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="16,12,16,24" Spacing="14">
@@ -15,7 +15,7 @@
                 </VerticalStackLayout>
 
                 <!-- Sélecteurs mois et quartier -->
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Grid RowDefinitions="Auto,Auto" RowSpacing="10">
                     <Border Style="{StaticResource Champ}">
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
                             <c:Icone Nom="Calendrier" Taille="20" />
@@ -23,7 +23,7 @@
                                     SemanticProperties.Description="Mois" />
                         </Grid>
                     </Border>
-                    <Border Grid.Column="1" Style="{StaticResource Champ}">
+                    <Border Grid.Row="1" Style="{StaticResource Champ}">
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
                             <c:Icone Nom="Epingle" Taille="20" />
                             <Picker Grid.Column="1" Title="Quartier" ItemsSource="{Binding Quartiers}"
@@ -53,30 +53,13 @@
                 </Border>
 
                 <!-- Quatre indicateurs -->
-                <FlexLayout BindableLayout.ItemsSource="{Binding Indicateurs}" Wrap="Wrap" JustifyContent="SpaceBetween"
-                            IsVisible="{Binding AvecDonnees}">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate x:DataType="vm:Indicateur">
-                            <Border FlexLayout.Basis="48.5%" Margin="0,0,0,10" StrokeThickness="0" StrokeShape="RoundRectangle 18"
-                                    Padding="12" BackgroundColor="{Binding Clair}">
-                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                                    <Border Style="{StaticResource Rond}" WidthRequest="38" HeightRequest="38"
-                                            BackgroundColor="{Binding Couleur}" VerticalOptions="Start">
-                                        <c:Icone Nom="{Binding Icone}" Couleur="{StaticResource Blanc}" Taille="18" />
-                                    </Border>
-                                    <VerticalStackLayout Grid.Column="1">
-                                        <Label Text="{Binding Libelle}" FontSize="12" />
-                                        <Label Text="{Binding Valeur}" Style="{StaticResource Chiffre}" FontSize="20"
-                                               LineBreakMode="NoWrap" />
-                                        <Label Text="{Binding Variation}" TextColor="{Binding CouleurVariation}"
-                                               FontFamily="OpenSansSemibold" FontSize="12" />
-                                        <Label Text="{Binding Comparaison}" Style="{StaticResource Discret}" FontSize="11" />
-                                    </VerticalStackLayout>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </FlexLayout>
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10"
+                      IsVisible="{Binding AvecDonnees}">
+                    <c:CarteIndicateur Indicateur="{Binding Nombre}" />
+                    <c:CarteIndicateur Grid.Column="1" Indicateur="{Binding DureeTotale}" />
+                    <c:CarteIndicateur Grid.Row="1" Indicateur="{Binding DureeMoyenne}" />
+                    <c:CarteIndicateur Grid.Row="1" Grid.Column="1" Indicateur="{Binding PlusLongue}" />
+                </Grid>
 
                 <!-- Évolution sur 12 mois -->
                 <Border Style="{StaticResource Carte}">
@@ -167,5 +150,7 @@
                 </Border>
             </VerticalStackLayout>
         </ScrollView>
+
+        <c:BarreOnglets Grid.Row="2" Actif="statistiques" />
     </Grid>
 </ContentPage>

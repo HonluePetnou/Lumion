@@ -5,7 +5,7 @@
              xmlns:vm="clr-namespace:Lumion.ViewModels"
              x:Class="Lumion.Views.ProfilPage"
              x:DataType="vm:ProfilViewModel">
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,*,Auto">
         <c:EnTete BackgroundColor="{StaticResource Blanc}" />
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="16,12,16,24" Spacing="14">
@@ -219,5 +219,7 @@
                 </VerticalStackLayout>
             </VerticalStackLayout>
         </ScrollView>
+
+        <c:BarreOnglets Grid.Row="2" Actif="profil" />
     </Grid>
 </ContentPage>

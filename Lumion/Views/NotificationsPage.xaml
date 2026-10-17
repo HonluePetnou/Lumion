@@ -4,7 +4,7 @@
              xmlns:c="clr-namespace:Lumion.Controls"
              xmlns:v="clr-namespace:Lumion.Views"
              x:Class="Lumion.Views.NotificationsPage">
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,*,Auto">
         <Grid ColumnDefinitions="48,*" Padding="12,8,16,8" BackgroundColor="{StaticResource Blanc}">
             <Grid BackgroundColor="Transparent" HeightRequest="48" SemanticProperties.Description="Retour">
                 <Grid.GestureRecognizers>
@@ -46,5 +46,7 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
+
+        <c:BarreOnglets Grid.Row="2" Actif="accueil" />
     </Grid>
 </ContentPage>

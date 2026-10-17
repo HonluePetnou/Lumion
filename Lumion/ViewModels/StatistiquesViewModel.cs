@@ -58,7 +58,11 @@ public partial class StatistiquesViewModel : ObservableObject
     public List<string> Mois { get; } = [];
     public ObservableCollection<string> Quartiers { get; } = [];
     public ObservableCollection<string> Comparaisons { get; } = [];
-    public ObservableCollection<Indicateur> Indicateurs { get; } = [];
+    // Quatre indicateurs fixes, liés un par un : plus fiable qu'une liaison par index sur une collection.
+    [ObservableProperty] private Indicateur? _nombre;
+    [ObservableProperty] private Indicateur? _dureeTotale;
+    [ObservableProperty] private Indicateur? _dureeMoyenne;
+    [ObservableProperty] private Indicateur? _plusLongue;
     public ObservableCollection<RangQuartier> Classement { get; } = [];
     public ObservableCollection<LigneComparaison> Comparaison { get; } = [];
 
@@ -124,12 +128,10 @@ public partial class StatistiquesViewModel : ObservableObject
         var p = _stats.Mensuelles(precedent.Year, precedent.Month, quartierId);
         string reference = $"vs {precedent.ToString("MMM yyyy", Heure.Culture)}";
 
-        Indicateurs.Clear();
-
-        Indicateurs.Add(Creer("Nombre de coupures", s.NbCoupures.ToString(), s.NbCoupures, p.NbCoupures, reference, "Eclair", Palette.Rouge, Palette.RougeClair));
-        Indicateurs.Add(Creer("Durée totale", Heure.Duree(s.DureeTotaleMin), s.DureeTotaleMin, p.DureeTotaleMin, reference, "Horloge", Palette.PrimaireFonce, Palette.PrimaireClair));
-        Indicateurs.Add(Creer("Durée moyenne", Heure.Duree(s.DureeMoyenneMin), s.DureeMoyenneMin, p.DureeMoyenneMin, reference, "Stats", Palette.Bleu, Palette.BleuClair));
-        Indicateurs.Add(Creer("Plus longue coupure", Heure.Duree(s.DureeMaxMin), s.DureeMaxMin, p.DureeMaxMin, reference, "Sablier", Palette.Violet, Palette.VioletClair));
+        Nombre = Creer("Nombre de coupures", s.NbCoupures.ToString(), s.NbCoupures, p.NbCoupures, reference, "Eclair", Palette.Rouge, Palette.RougeClair);
+        DureeTotale = Creer("Durée totale", Heure.Duree(s.DureeTotaleMin), s.DureeTotaleMin, p.DureeTotaleMin, reference, "Horloge", Palette.PrimaireFonce, Palette.PrimaireClair);
+        DureeMoyenne = Creer("Durée moyenne", Heure.Duree(s.DureeMoyenneMin), s.DureeMoyenneMin, p.DureeMoyenneMin, reference, "Stats", Palette.Bleu, Palette.BleuClair);
+        PlusLongue = Creer("Plus longue coupure", Heure.Duree(s.DureeMaxMin), s.DureeMaxMin, p.DureeMaxMin, reference, "Sablier", Palette.Violet, Palette.VioletClair);
 
         // UC14 E1 / E2 : aucune donnée, ou chiffres provisoires pour le mois en cours.
         AucuneDonnee = s.NbCoupures == 0 && s.DureeTotaleMin == 0;

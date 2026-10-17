@@ -5,7 +5,7 @@
              xmlns:vm="clr-namespace:Lumion.ViewModels"
              x:Class="Lumion.Views.MesSignalementsPage"
              x:DataType="vm:MesSignalementsViewModel">
-    <Grid RowDefinitions="Auto,Auto,*">
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
         <c:EnTete BackgroundColor="{StaticResource Blanc}" />
 
         <VerticalStackLayout Grid.Row="1" Padding="16,12,0,8" Spacing="10" BackgroundColor="{StaticResource Blanc}">
@@ -97,5 +97,7 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
+
+        <c:BarreOnglets Grid.Row="3" Actif="signalements" />
     </Grid>
 </ContentPage>

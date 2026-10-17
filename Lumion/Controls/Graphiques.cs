@@ -33,7 +33,9 @@ public class GraphiqueEvolution : IDrawable
 
         canvas.FontColor = Palette.Gris;
         float pas = trace.Width / (Mois.Length - 1);
-        for (int i = 0; i < Mois.Length; i++)
+        // Un mois sur deux quand la place manque, pour que les libellés ne se chevauchent pas.
+        int saut = pas < 34 ? 2 : 1;
+        for (int i = Mois.Length - 1; i >= 0; i -= saut)
             canvas.DrawString(Mois[i], trace.Left + pas * i - 20, trace.Bottom + 4, 40, 16, HorizontalAlignment.Center, VerticalAlignment.Top);
 
         Serie(canvas, trace, Heures, maxHeures, Palette.Primaire);

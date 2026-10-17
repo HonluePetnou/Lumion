@@ -6,7 +6,7 @@
              x:Class="Lumion.Views.SignalerPage"
              x:DataType="vm:SignalerViewModel"
              BackgroundColor="{StaticResource Blanc}">
-    <Grid RowDefinitions="Auto,*,Auto">
+    <Grid RowDefinitions="Auto,*,Auto,Auto">
         <Grid ColumnDefinitions="48,*,48" Padding="12,8">
             <Grid BackgroundColor="Transparent" HeightRequest="48" SemanticProperties.Description="Retour">
                 <Grid.GestureRecognizers>
@@ -94,5 +94,7 @@
             <ActivityIndicator IsRunning="{Binding EnvoiEnCours}" IsVisible="{Binding EnvoiEnCours}"
                                HorizontalOptions="End" Margin="0,0,20,0" Color="{StaticResource Encre}" />
         </Grid>
+
+        <c:BarreOnglets Grid.Row="3" Actif="accueil" />
     </Grid>
 </ContentPage>

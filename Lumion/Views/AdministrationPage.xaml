@@ -5,7 +5,7 @@
              xmlns:vm="clr-namespace:Lumion.ViewModels"
              x:Class="Lumion.Views.AdministrationPage"
              x:DataType="vm:AdministrationViewModel">
-    <Grid RowDefinitions="Auto,*">
+    <Grid RowDefinitions="Auto,*,Auto">
         <Grid ColumnDefinitions="48,*" Padding="12,8,16,8" BackgroundColor="{StaticResource Blanc}">
             <Grid BackgroundColor="Transparent" HeightRequest="48" SemanticProperties.Description="Retour">
                 <Grid.GestureRecognizers>
@@ -250,5 +250,7 @@
                 </VerticalStackLayout>
             </VerticalStackLayout>
         </ScrollView>
+
+        <c:BarreOnglets Grid.Row="2" Actif="profil" />
     </Grid>
 </ContentPage>

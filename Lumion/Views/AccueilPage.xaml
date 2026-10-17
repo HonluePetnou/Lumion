@@ -6,7 +6,7 @@
              x:Class="Lumion.Views.AccueilPage"
              x:DataType="vm:AccueilViewModel"
              BackgroundColor="{StaticResource Blanc}">
-    <Grid RowDefinitions="Auto,Auto,*">
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
         <c:EnTete />
 
         <!-- Recherche d'un quartier (EF3.4) -->
@@ -311,5 +311,7 @@
                 </ScrollView>
             </Border>
         </Grid>
+
+        <c:BarreOnglets Grid.Row="3" Actif="accueil" />
     </Grid>
 </ContentPage>

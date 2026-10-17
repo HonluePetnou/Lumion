@@ -54,6 +54,8 @@
     <Style TargetType="ContentPage" ApplyToDerivedTypes="True">
         <Setter Property="BackgroundColor" Value="{StaticResource Fond}" />
         <Setter Property="Shell.NavBarIsVisible" Value="False" />
+        <!-- La navigation passe par la barre du bas (Controls/BarreOnglets), identique sur toutes les plateformes. -->
+        <Setter Property="Shell.TabBarIsVisible" Value="False" />
     </Style>
 
     <Style TargetType="Shell" ApplyToDerivedTypes="True">

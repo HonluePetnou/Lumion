@@ -5,7 +5,7 @@
              xmlns:vm="clr-namespace:Lumion.ViewModels"
              x:Class="Lumion.Views.ModerationPage"
              x:DataType="vm:ModerationViewModel">
-    <Grid RowDefinitions="Auto,Auto,*">
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
         <Grid ColumnDefinitions="48,*" Padding="12,8,16,8" BackgroundColor="{StaticResource Blanc}">
             <Grid BackgroundColor="Transparent" HeightRequest="48" SemanticProperties.Description="Retour">
                 <Grid.GestureRecognizers>
@@ -109,5 +109,7 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
+
+        <c:BarreOnglets Grid.Row="3" Actif="profil" />
     </Grid>
 </ContentPage>
