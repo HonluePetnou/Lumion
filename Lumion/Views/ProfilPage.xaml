@@ -28,9 +28,9 @@
                     <Border Style="{StaticResource Carte}">
                         <VerticalStackLayout Spacing="12">
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
-                                <Border Style="{StaticResource Rond}" WidthRequest="72" HeightRequest="72"
+                                <Border Style="{StaticResource Rond}" WidthRequest="60" HeightRequest="60"
                                         BackgroundColor="{StaticResource PrimaireClair}">
-                                    <Label Text="{Binding Initiales}" FontFamily="OpenSansSemibold" FontSize="26"
+                                    <Label Text="{Binding Initiales}" FontFamily="OpenSansSemibold" FontSize="22"
                                            TextColor="{StaticResource PrimaireFonce}" HorizontalOptions="Center"
                                            VerticalOptions="Center" />
                                 </Border>
@@ -45,8 +45,14 @@
                                         <Label Text="{Binding Telephone}" FontSize="13" />
                                     </HorizontalStackLayout>
                                 </VerticalStackLayout>
-                                <Button Grid.Column="2" Text="Modifier" Style="{StaticResource BoutonSecondaire}"
-                                        Command="{Binding ModifierCommand}" VerticalOptions="Start" />
+                                <Border Grid.Column="2" Style="{StaticResource Rond}" BackgroundColor="{StaticResource FondGris}"
+                                        WidthRequest="48" HeightRequest="48" VerticalOptions="Start"
+                                        SemanticProperties.Description="Modifier le profil">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding ModifierCommand}" />
+                                    </Border.GestureRecognizers>
+                                    <c:Icone Nom="Crayon" Taille="20" />
+                                </Border>
                             </Grid>
                             <Border StrokeThickness="0" StrokeShape="RoundRectangle 14" Padding="12,10"
                                     BackgroundColor="{StaticResource PrimaireClair}">
@@ -111,7 +117,7 @@
                     <!-- Notifications et heures silencieuses -->
                     <Border Style="{StaticResource Carte}">
                         <VerticalStackLayout Spacing="12">
-                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                            <Grid ColumnDefinitions="Auto,*,56" ColumnSpacing="12">
                                 <Border Style="{StaticResource Rond}" BackgroundColor="{StaticResource BleuClair}">
                                     <c:Icone Nom="Cloche" Taille="20" Couleur="{StaticResource Bleu}" />
                                 </Border>
@@ -119,11 +125,11 @@
                                     <Label Text="Notifications" Style="{StaticResource TitreElement}" />
                                     <Label Text="Recevoir les alertes et informations" Style="{StaticResource Discret}" />
                                 </VerticalStackLayout>
-                                <Switch Grid.Column="2" IsToggled="{Binding NotificationsActives}" VerticalOptions="Center"
+                                <Switch Grid.Column="2" WidthRequest="52" HorizontalOptions="End" IsToggled="{Binding NotificationsActives}" VerticalOptions="Center"
                                         SemanticProperties.Description="Activer les notifications" />
                             </Grid>
                             <BoxView HeightRequest="1" Color="{StaticResource Bordure}" />
-                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                            <Grid ColumnDefinitions="Auto,*,56" ColumnSpacing="12">
                                 <Border Style="{StaticResource Rond}" BackgroundColor="{StaticResource VioletClair}">
                                     <c:Icone Nom="Lune" Taille="20" Couleur="{StaticResource Violet}" />
                                 </Border>
@@ -131,7 +137,7 @@
                                     <Label Text="Heures silencieuses" Style="{StaticResource TitreElement}" />
                                     <Label Text="Aucune notification pendant cette période" Style="{StaticResource Discret}" />
                                 </VerticalStackLayout>
-                                <Switch Grid.Column="2" IsToggled="{Binding SilenceActif}" VerticalOptions="Center"
+                                <Switch Grid.Column="2" WidthRequest="52" HorizontalOptions="End" IsToggled="{Binding SilenceActif}" VerticalOptions="Center"
                                         SemanticProperties.Description="Activer les heures silencieuses" />
                             </Grid>
                             <Border Style="{StaticResource Champ}" IsEnabled="{Binding SilenceActif}">

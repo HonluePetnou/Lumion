@@ -45,7 +45,7 @@ public class Choix : ContentView
             return;
         }
 
-        var grille = new Grid { ColumnSpacing = 8 };
+        var grille = new Grid { ColumnSpacing = Etire ? 6 : 8 };
         for (int i = 0; i < libelles.Length; i++)
         {
             // Étirées, les puces se partagent la largeur au prorata de la longueur de leur libellé.
@@ -56,10 +56,10 @@ public class Choix : ContentView
             var puce = new Border
             {
                 StrokeShape = new RoundRectangle { CornerRadius = 18 }, StrokeThickness = 0, HeightRequest = 40,
-                Margin = new Thickness(0, 4), Padding = new Thickness(Etire ? 6 : 16, 0),
+                Margin = new Thickness(0, 4), Padding = new Thickness(Etire ? 4 : 16, 0),
                 Content = new Label
                 {
-                    Text = libelles[i], FontFamily = "OpenSansSemibold", FontSize = Etire ? 13 : 14, TextColor = Palette.Encre,
+                    Text = libelles[i], FontFamily = "OpenSansSemibold", FontSize = Etire ? 12 : 14, TextColor = Palette.Encre,
                     HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center,
                     LineBreakMode = LineBreakMode.NoWrap
                 }

@@ -22,12 +22,10 @@
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="16,12,16,24" Spacing="14">
                 <!-- Onglets -->
-                <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
-                    <c:Choix Options="Quartiers|Utilisateurs|Délestages|Export" Selection="{Binding Onglet}" />
-                </ScrollView>
+                <c:Choix Options="Quartiers|Utilisateurs|Délestages|Export" Selection="{Binding Onglet}" Etire="True" />
 
                 <!-- Indicateurs -->
-                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
                     <Border StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="10" BackgroundColor="{StaticResource VertClair}">
                         <VerticalStackLayout Spacing="2">
                             <c:Icone Nom="Carte" Taille="18" Couleur="{StaticResource Vert}" HorizontalOptions="Start" />
@@ -43,7 +41,7 @@
                             <Label Text="Utilisateurs actifs" FontSize="11" />
                         </VerticalStackLayout>
                     </Border>
-                    <Border Grid.Column="2" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="10"
+                    <Border Grid.Row="1" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="10"
                             BackgroundColor="{StaticResource PrimaireClair}">
                         <VerticalStackLayout Spacing="2">
                             <c:Icone Nom="Eclair" Taille="18" Couleur="{StaticResource PrimaireFonce}" HorizontalOptions="Start" />
@@ -51,7 +49,7 @@
                             <Label Text="Délestages programmés" FontSize="11" />
                         </VerticalStackLayout>
                     </Border>
-                    <Border Grid.Column="3" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="10"
+                    <Border Grid.Row="1" Grid.Column="1" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="10"
                             BackgroundColor="{StaticResource RougeClair}">
                         <VerticalStackLayout Spacing="2">
                             <c:Icone Nom="Alerte" Taille="18" Couleur="{StaticResource Rouge}" HorizontalOptions="Start" />
@@ -113,7 +111,7 @@
                             </BindableLayout.EmptyView>
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate x:DataType="vm:LigneUtilisateur">
-                                    <Grid ColumnDefinitions="Auto,*,Auto,48" ColumnSpacing="10" MinimumHeightRequest="60">
+                                    <Grid ColumnDefinitions="Auto,*,48" ColumnSpacing="10" MinimumHeightRequest="60">
                                         <Border Style="{StaticResource Rond}" BackgroundColor="{Binding Clair}">
                                             <Label Text="{Binding Initiales}" TextColor="{Binding Couleur}" FontFamily="OpenSansSemibold"
                                                    HorizontalOptions="Center" VerticalOptions="Center" />
@@ -122,12 +120,12 @@
                                             <Label Text="{Binding Utilisateur.NomAffichage}" Style="{StaticResource TitreElement}"
                                                    LineBreakMode="TailTruncation" />
                                             <Label Text="{Binding Contact}" Style="{StaticResource Discret}" FontSize="12" />
-                                        </VerticalStackLayout>
-                                        <Border Grid.Column="2" Style="{StaticResource Pastille}" BackgroundColor="{Binding ClairRole}">
+                                            <Border Style="{StaticResource Pastille}" BackgroundColor="{Binding ClairRole}" HorizontalOptions="Start" Padding="8,2">
                                             <Label Text="{Binding Role}" TextColor="{Binding CouleurRole}" FontSize="12"
                                                    FontFamily="OpenSansSemibold" />
                                         </Border>
-                                        <Grid Grid.Column="3" BackgroundColor="Transparent"
+                                        </VerticalStackLayout>
+                                        <Grid Grid.Column="2" BackgroundColor="Transparent"
                                               SemanticProperties.Description="Actions sur l'utilisateur">
                                             <Grid.GestureRecognizers>
                                                 <TapGestureRecognizer
@@ -232,18 +230,18 @@
                     <Border Style="{StaticResource Carte}">
                         <VerticalStackLayout Spacing="10">
                             <Label Text="Outils de démonstration" Style="{StaticResource TitreSection}" />
-                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <Grid ColumnDefinitions="*,56" ColumnSpacing="12">
                                 <VerticalStackLayout>
                                     <Label Text="Vérification GPS stricte (RG08)" Style="{StaticResource TitreElement}" />
                                     <Label Style="{StaticResource Discret}"
                                            Text="Un signalement fait hors du quartier choisi ne compte qu'après validation." />
                                 </VerticalStackLayout>
-                                <Switch Grid.Column="1" IsToggled="{Binding GpsStrict}" VerticalOptions="Center"
+                                <Switch Grid.Column="1" WidthRequest="52" HorizontalOptions="End" IsToggled="{Binding GpsStrict}" VerticalOptions="Center"
                                         SemanticProperties.Description="Vérification GPS stricte" />
                             </Grid>
-                            <Button Text="Simuler 2 signalements de voisins" Style="{StaticResource BoutonSecondaire}"
+                            <Button Text="Simuler 2 voisins" Style="{StaticResource BoutonSecondaire}"
                                     Command="{Binding SimulerVoisinsCommand}" />
-                            <Button Text="Réinitialiser les données de démonstration" Style="{StaticResource BoutonLien}"
+                            <Button Text="Réinitialiser la démo" Style="{StaticResource BoutonLien}"
                                     TextColor="{StaticResource Rouge}" Command="{Binding ReinitialiserCommand}" />
                         </VerticalStackLayout>
                     </Border>

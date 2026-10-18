@@ -217,7 +217,7 @@ public partial class AccueilViewModel : ObservableObject
             DerniereCoupure = derniere is null
                 ? "Aucune coupure enregistrée"
                 : $"{Heure.Relative(derniere.Debut, maintenant)} · {Heure.Duree(derniere.DureeMinutes ?? 0)}",
-            CoupuresDuMois = Pluriel(mois.NbCoupures, "coupure") + " ce mois-ci",
+            CoupuresDuMois = Pluriel(mois.NbCoupures, "coupure"),
             PeutSignaler = coupure is null,
             PeutConfirmer = coupure is not null && coupure.Type == TypeCoupure.Signalee,
             DejaConfirme = dejaSignale,

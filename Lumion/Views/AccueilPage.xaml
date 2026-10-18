@@ -297,14 +297,14 @@
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="10" IsVisible="{Binding Fiche.ACoupure}">
                             <Button Text="{Binding Fiche.TexteConfirmer}" Style="{StaticResource BoutonDanger}"
                                     Command="{Binding MoiAussiCommand}" IsVisible="{Binding Fiche.PeutConfirmer}" />
-                            <Button Grid.Column="1" Text="Le courant est revenu" BackgroundColor="{StaticResource VertClair}"
+                            <Button Grid.Column="1" Text="Courant revenu" BackgroundColor="{StaticResource VertClair}"
                                     TextColor="{StaticResource Vert}" Command="{Binding CourantRevenuCommand}"
                                     IsVisible="{Binding Fiche.PeutRetour}" />
                         </Grid>
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                             <Button Text="{Binding Fiche.TexteAbonnement}" Style="{StaticResource BoutonSecondaire}"
                                     Command="{Binding BasculerAbonnementCommand}" />
-                            <Button Grid.Column="1" Text="Voir l'historique" Style="{StaticResource BoutonSecondaire}"
+                            <Button Grid.Column="1" Text="Historique" Style="{StaticResource BoutonSecondaire}"
                                     Command="{Binding VoirHistoriqueCommand}" />
                         </Grid>
                     </VerticalStackLayout>

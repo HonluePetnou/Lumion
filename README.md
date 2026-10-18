@@ -45,8 +45,7 @@ branché : le code est affiché à l'écran en mode démonstration.
 
 Au premier lancement, la base est remplie avec 20 quartiers, 55 utilisateurs et 12 mois de
 coupures. Bonamoussadi est en coupure confirmée, Deido à un signalement de la confirmation,
-Makepe sous délestage annoncé. Administration → Export → « Réinitialiser les données de
-démonstration » remet cet état à neuf.
+Makepe sous délestage annoncé. Administration → Export → « Réinitialiser la démo » remet cet état à neuf.
 
 ## Limites connues
 
