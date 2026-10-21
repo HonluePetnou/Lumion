@@ -94,7 +94,7 @@ public class StatsEtAuthTests : IDisposable
 
         Assert.Equal(Role.Habitant, utilisateur.Role);
         Assert.True(_b.Admin.EstAbonne(utilisateur.Id, _b.Akwa.Id));
-        Assert.Equal(utilisateur.Id, _b.Auth.Courant!.Id);
+        Assert.Equal(utilisateur.Id, _b.Auth.Trouver(telephone)!.Id);
         Assert.NotNull(_b.Auth.Trouver(telephone));
     }
 

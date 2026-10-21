@@ -37,5 +37,7 @@ public enum CodeErreur
     DernierAdministrateur,
     DejaTraite,
     AucunDoublon,
-    Introuvable
+    Introuvable,
+    NonConnecte,
+    Interdit
 }

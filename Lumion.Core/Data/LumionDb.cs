@@ -21,6 +21,7 @@ public sealed class LumionDb : IDisposable
         Conn.CreateTable<NotificationLog>();
         Conn.CreateTable<JournalModeration>();
         Conn.CreateTable<SignalementEnAttente>();
+        Conn.CreateTable<SessionApi>();
         Conn.CreateTable<Meta>();
     }
 
@@ -30,7 +31,7 @@ public sealed class LumionDb : IDisposable
 
     public void Vider()
     {
-        foreach (var table in new[] { "Utilisateur", "Quartier", "Coupure", "Signalement", "Abonnement", "AnnonceDelestage", "NotificationLog", "JournalModeration", "SignalementEnAttente", "Meta" })
+        foreach (var table in new[] { "Utilisateur", "Quartier", "Coupure", "Signalement", "Abonnement", "AnnonceDelestage", "NotificationLog", "JournalModeration", "SignalementEnAttente", "SessionApi", "Meta" })
             Conn.Execute($"delete from {table}");
     }
 

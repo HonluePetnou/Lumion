@@ -140,6 +140,15 @@ public class SignalementEnAttente
     public DateTime CreeLe { get; set; }
 }
 
+/// <summary>Session ouverte par l'API : un jeton opaque associé à un utilisateur (UC02).</summary>
+public class SessionApi
+{
+    [PrimaryKey] public string Jeton { get; set; } = "";
+    [Indexed] public int UtilisateurId { get; set; }
+    public DateTime CreeLe { get; set; }
+    public DateTime ExpireLe { get; set; }
+}
+
 public class Meta
 {
     [PrimaryKey] public string Cle { get; set; } = "";
