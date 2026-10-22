@@ -64,7 +64,9 @@
                     </Border>
                 </Grid>
 
-                <c:Choix Segment="True" Options="Quartiers|Utilisateurs|Délestages|Export" Selection="{Binding Onglet}" />
+                <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                    <c:Choix Options="Quartiers|Utilisateurs|Délestages|Export" Selection="{Binding Onglet}" />
+                </ScrollView>
 
                 <!-- Quartiers (UC16) -->
                 <Border Style="{StaticResource Carte}" Padding="16,6,16,14" IsVisible="{Binding OngletQuartiers}">
@@ -163,21 +165,21 @@
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                                     <c:Icone Nom="Calendrier" Taille="18" Couleur="{StaticResource AccentTexte}" />
                                     <DatePicker Grid.Column="1" Date="{Binding DateDelestage}" MinimumDate="{Binding DateMin}"
-                                                Format="dddd d MMMM yyyy" />
+                                                Format="dd/MM/yyyy" HorizontalOptions="Start" />
                                 </Grid>
                             </Border>
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                                <Border Style="{StaticResource Champ}">
-                                    <HorizontalStackLayout Spacing="8">
-                                        <Label Text="Début" Style="{StaticResource TexteLegende}" VerticalOptions="Center" />
+                                <Border Style="{StaticResource Champ}" Padding="14,8">
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="Début" Style="{StaticResource TexteLegende}" />
                                         <TimePicker Time="{Binding HeureDebut}" Format="HH:mm" />
-                                    </HorizontalStackLayout>
+                                    </VerticalStackLayout>
                                 </Border>
-                                <Border Grid.Column="1" Style="{StaticResource Champ}">
-                                    <HorizontalStackLayout Spacing="8">
-                                        <Label Text="Fin" Style="{StaticResource TexteLegende}" VerticalOptions="Center" />
+                                <Border Grid.Column="1" Style="{StaticResource Champ}" Padding="14,8">
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="Fin" Style="{StaticResource TexteLegende}" />
                                         <TimePicker Time="{Binding HeureFin}" Format="HH:mm" />
-                                    </HorizontalStackLayout>
+                                    </VerticalStackLayout>
                                 </Border>
                             </Grid>
                             <Border Style="{StaticResource Champ}">

@@ -27,6 +27,7 @@
                         <VerticalStackLayout Spacing="2">
                             <Label Text="{Binding Duree}" Style="{StaticResource ChiffreGrand}" TextColor="{StaticResource Accent}" />
                             <Label Text="{Binding MentionDuree}" Style="{StaticResource TexteLegende}" TextColor="{StaticResource VedetteTexte2}" />
+                            <Label Text="{Binding Debut}" Style="{StaticResource TexteLegende}" TextColor="{StaticResource VedetteTexte2}" />
                         </VerticalStackLayout>
                         <!-- Frise de la journée -->
                         <VerticalStackLayout Spacing="6">
@@ -64,19 +65,19 @@
                     <Border Style="{StaticResource Carte}" Padding="12" StrokeShape="RoundRectangle 16">
                         <VerticalStackLayout Spacing="2">
                             <Label Text="{Binding NbSignalements}" Style="{StaticResource ChiffreMoyen}" />
-                            <Label Text="signalements" Style="{StaticResource TexteLegende}" />
+                            <Label Text="voisins" Style="{StaticResource TexteLegende}" />
                         </VerticalStackLayout>
                     </Border>
                     <Border Grid.Column="1" Style="{StaticResource Carte}" Padding="12" StrokeShape="RoundRectangle 16">
                         <VerticalStackLayout Spacing="2">
                             <Label Text="{Binding HeureDebut}" Style="{StaticResource ChiffreMoyen}" />
-                            <Label Text="{Binding Debut}" Style="{StaticResource TexteLegende}" LineBreakMode="TailTruncation" />
+                            <Label Text="début" Style="{StaticResource TexteLegende}" />
                         </VerticalStackLayout>
                     </Border>
                     <Border Grid.Column="2" Style="{StaticResource Carte}" Padding="12" StrokeShape="RoundRectangle 16">
                         <VerticalStackLayout Spacing="2">
                             <Label Text="{Binding HeureFin}" Style="{StaticResource ChiffreMoyen}" />
-                            <Label Text="{Binding Fin}" Style="{StaticResource TexteLegende}" LineBreakMode="TailTruncation" />
+                            <Label Text="fin" Style="{StaticResource TexteLegende}" />
                         </VerticalStackLayout>
                     </Border>
                 </Grid>

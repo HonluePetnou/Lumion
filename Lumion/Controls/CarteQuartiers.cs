@@ -26,6 +26,7 @@ public class CarteQuartiers
     private const string CleId = "quartierId";
     private readonly MemoryLayer _halos = new("Halos") { Style = null };
     private readonly MemoryLayer _reperes = new("Repères") { Style = null };
+    private List<(int Id, MPoint Centre)> _centres = [];
 
     public MapControl Controle { get; } = new();
 
@@ -40,12 +41,19 @@ public class CarteQuartiers
         carte.Layers.Add(_halos);
         carte.Layers.Add(_reperes);
 
+        // Toucher : le quartier dont le repère est le plus proche du doigt, à 40 px près.
+        // Plus fiable que la détection par symbole, et plus tolérant pour un doigt sur un petit repère.
         carte.Tapped += (_, e) =>
         {
-            var info = e.GetMapInfo([_reperes, _halos]);
-            if (info?.Feature?[CleId] is int id)
+            double rayon = 40 * carte.Navigator.Viewport.Resolution;
+            var proche = _centres
+                .Select(c => (c.Id, Distance: c.Centre.Distance(e.WorldPosition)))
+                .Where(c => c.Distance <= rayon)
+                .OrderBy(c => c.Distance)
+                .FirstOrDefault();
+            if (proche.Id != 0)
             {
-                QuartierTouche?.Invoke(id);
+                QuartierTouche?.Invoke(proche.Id);
                 e.Handled = true;
             }
         };
@@ -107,6 +115,7 @@ public class CarteQuartiers
             });
             reperes.Add(repere);
         }
+        _centres = reperes.OfType<PointFeature>().Select(r => ((int)r[CleId]!, r.Point)).ToList();
         _halos.Features = halos;
         _reperes.Features = reperes;
         _halos.DataHasChanged();

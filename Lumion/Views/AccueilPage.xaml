@@ -257,7 +257,7 @@
                                     </Border.GestureRecognizers>
                                     <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
                                         <c:Icone Nom="Check" Taille="18" Couleur="{StaticResource Normal}" />
-                                        <Label Text="Courant revenu" FontFamily="JakartaBold" FontSize="13" TextColor="{StaticResource Normal}"
+                                        <Label Text="C'est revenu" FontFamily="JakartaBold" FontSize="13" TextColor="{StaticResource Normal}"
                                                VerticalOptions="Center" />
                                     </HorizontalStackLayout>
                                 </Border>

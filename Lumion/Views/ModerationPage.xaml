@@ -110,7 +110,7 @@
                                                 Command="{Binding CloturerCommand, Source={RelativeSource AncestorType={x:Type vm:ModerationViewModel}}, x:DataType=vm:ModerationViewModel}"
                                                 CommandParameter="{Binding .}" />
                                     </Grid>
-                                    <Button Text="Voir les signalements et leurs auteurs" Style="{StaticResource BoutonLien}"
+                                    <Button Text="Voir les signalements" Style="{StaticResource BoutonLien}"
                                             HorizontalOptions="Center"
                                             Command="{Binding DetailCommand, Source={RelativeSource AncestorType={x:Type vm:ModerationViewModel}}, x:DataType=vm:ModerationViewModel}"
                                             CommandParameter="{Binding .}" />

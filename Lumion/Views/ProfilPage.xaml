@@ -16,7 +16,7 @@
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*,Auto">
-        <c:EnTete Titre="Profil" IconeAction="Crayon" DescriptionAction="Modifier le profil" Commande="{Binding ModifierCommand}" />
+        <c:EnTete Titre="Profil" IconeAction="{Binding IconeModifier}" DescriptionAction="Modifier le profil" Commande="{Binding ModifierCommand}" />
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="20,4,20,24" Spacing="12">

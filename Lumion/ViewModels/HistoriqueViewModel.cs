@@ -23,8 +23,9 @@ public record LigneCoupure(int Id, string Jour, string Mois, string Duree, strin
             : delestage ? ("Délestage", Palette.Bleu, Palette.BleuClair)
             : c.Breve ? ("Brève", Palette.Gris, Palette.FondGris)
             : ("", Palette.Gris, Palette.FondGris);
+        int ecoule = Math.Max(0, (int)(maintenant - c.Debut).TotalMinutes);
         string duree = c.Ouverte
-            ? Heure.Chrono(maintenant - c.Debut)
+            ? (ecoule < 60 ? $"{ecoule} min" : $"{ecoule / 60} h {ecoule % 60:00}")
             : Heure.Duree(c.DureeMinutes ?? 0) + (c.DureeEstimee ? " (estimée)" : "");
         string fin = c.Fin is { } f ? Heure.Locale(f).ToString("HH:mm") : "en cours";
         string horaires = $"{debut:HH:mm} → {fin} · {c.NbConfirmations} signalement{(c.NbConfirmations > 1 ? "s" : "")}";

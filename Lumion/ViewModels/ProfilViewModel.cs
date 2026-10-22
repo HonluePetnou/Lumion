@@ -37,6 +37,8 @@ public partial class ProfilViewModel : ObservableObject
     [ObservableProperty] private string _apparence = Theme.Choix.ToString();
 
     public Session Session { get; }
+    /// <summary>Le crayon d'édition n'a de sens qu'avec un compte.</summary>
+    public string? IconeModifier => Session.EstConnecte ? "Crayon" : null;
     public ObservableCollection<PuceAbonnement> Abonnements { get; } = [];
 
     public ProfilViewModel(ILumionApi api, ReglagesConnexion reglages, Synchronisation synchronisation, Session session)
@@ -47,7 +49,9 @@ public partial class ProfilViewModel : ObservableObject
         Session = session;
         Session.PropertyChanged += async (_, e) =>
         {
-            if (e.PropertyName == nameof(Session.Utilisateur)) await Charger();
+            if (e.PropertyName != nameof(Session.Utilisateur)) return;
+            OnPropertyChanged(nameof(IconeModifier));
+            await Charger();
         };
         _api.EtatReseauChange += () => MainThread.BeginInvokeOnMainThread(DecrireServeur);
     }
