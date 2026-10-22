@@ -1,0 +1,8 @@
+**/bin/
+**/obj/
+**/.vs/
+Lumion/
+Lumion.Tests/
+Lumion.Api/donnees/
+docs/
+.git/

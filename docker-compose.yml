@@ -1,0 +1,20 @@
+# Déploiement du serveur Lumion (VPS) : l'image est construite depuis le dépôt GitHub.
+services:
+  api:
+    build:
+      context: https://github.com/HonluePetnou/Lumion.git#main
+      dockerfile: Lumion.Api/Dockerfile
+    container_name: lumion-api
+    restart: unless-stopped
+    ports:
+      - "5080:5080"
+    environment:
+      # En ligne, le code de connexion d'un compte modérateur ou administrateur n'est jamais renvoyé à
+      # l'application : il n'apparaît que dans les journaux du serveur (docker logs lumion-api).
+      Lumion__EnLigne: "true"
+      Lumion__AfficherCodeOtp: "true"
+    volumes:
+      - lumion-donnees:/donnees
+
+volumes:
+  lumion-donnees:
