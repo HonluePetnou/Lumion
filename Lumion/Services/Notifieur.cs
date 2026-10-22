@@ -1,35 +1,23 @@
 using Lumion.Core.Models;
-using Lumion.Core.Services;
 
 namespace Lumion.Services;
 
 /// <summary>
-/// Affiche les notifications destinées à l'utilisateur connecté (UC13) : bannière interne quand
-/// l'application est au premier plan, notification système sinon (Android).
+/// Affiche les notifications reçues du serveur (UC13) : bannière interne quand l'application est
+/// au premier plan, notification système sinon (Android).
 /// </summary>
 public class Notifieur
 {
-    private readonly Session _session;
     public bool AuPremierPlan { get; set; } = true;
 
     /// <summary>Bannière interne à afficher (UC13 A1).</summary>
     public event Action<NotificationLog>? Banniere;
 
-    public Notifieur(NotificationService notifications, Session session)
+    public void Afficher(NotificationLog log) => MainThread.BeginInvokeOnMainThread(() =>
     {
-        _session = session;
-        notifications.Envoyee += Recevoir;
-    }
-
-    private void Recevoir(NotificationLog log)
-    {
-        if (_session.Utilisateur?.Id != log.UtilisateurId) return;
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            if (AuPremierPlan) Banniere?.Invoke(log);
-            else AfficherSysteme(log);
-        });
-    }
+        if (AuPremierPlan) Banniere?.Invoke(log);
+        else AfficherSysteme(log);
+    });
 
     public static async Task<bool> DemanderAutorisationAsync()
     {
@@ -72,7 +60,7 @@ public class Notifieur
         }
         catch (Java.Lang.SecurityException)
         {
-            // Notifications refusées au niveau du téléphone (UC12 E2) : l'historique interne reste disponible.
+            // Notifications refusées au niveau du téléphone (UC12 E2) : la liste interne reste disponible.
         }
     }
 #else

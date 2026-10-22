@@ -1,6 +1,3 @@
-using Lumion.Core;
-using Lumion.Core.Data;
-using Lumion.Core.Services;
 using Lumion.Services;
 
 namespace Lumion;
@@ -8,15 +5,16 @@ namespace Lumion;
 public partial class App : Application
 {
     private readonly IServiceProvider _services;
-    private IDispatcherTimer? _minuteur;
 
-    /// <summary>Levé chaque minute : chronomètres en direct (UC09) et rafraîchissement des écrans.</summary>
+    /// <summary>Levé chaque minute : chronomètres en direct (UC09).</summary>
     public static event Action? Minute;
 
     public App(IServiceProvider services)
     {
         InitializeComponent();
         _services = services;
+        Theme.Appliquer();
+        RequestedThemeChanged += async (_, _) => await Theme.SuivreSysteme();
     }
 
     public static T Service<T>() where T : notnull =>
@@ -24,34 +22,30 @@ public partial class App : Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        JeuDeDonnees.Charger(_services.GetRequiredService<LumionDb>(), _services.GetRequiredService<IHorloge>());
-        var coupures = _services.GetRequiredService<CoupureService>();
         var notifieur = _services.GetRequiredService<Notifieur>();
-        coupures.Planifier();
+        var synchronisation = _services.GetRequiredService<Synchronisation>();
+        var session = _services.GetRequiredService<Session>();
 
         var fenetre = new Window(new AppShell()) { Title = "Lumion" };
         fenetre.Activated += (_, _) => notifieur.AuPremierPlan = true;
         fenetre.Deactivated += (_, _) => notifieur.AuPremierPlan = false;
-        fenetre.Resumed += (_, _) => Tic(coupures);
-        fenetre.Created += async (_, _) => await _services.GetRequiredService<Session>().ReprendreAsync();
-
-        // Planificateur local (UC20) : tant que l'application est ouverte, une passe par minute.
-        _minuteur = Dispatcher.CreateTimer();
-        _minuteur.Interval = TimeSpan.FromMinutes(1);
-        _minuteur.Tick += (_, _) => Tic(coupures);
-        _minuteur.Start();
-
-        // Envoi des signalements saisis hors ligne dès le retour du réseau (EF2.5).
-        Connectivity.Current.ConnectivityChanged += (_, e) =>
+        fenetre.Resumed += async (_, _) => await synchronisation.Maintenant();
+        fenetre.Created += async (_, _) =>
         {
-            if (e.NetworkAccess == NetworkAccess.Internet) coupures.Synchroniser();
+            await session.ReprendreAsync();
+            synchronisation.Demarrer(Dispatcher);
+        };
+
+        var minuteur = Dispatcher.CreateTimer();
+        minuteur.Interval = TimeSpan.FromMinutes(1);
+        minuteur.Tick += (_, _) => Minute?.Invoke();
+        minuteur.Start();
+
+        // Retour du réseau : envoi immédiat des signalements saisis hors ligne (EF2.5).
+        Connectivity.Current.ConnectivityChanged += async (_, e) =>
+        {
+            if (e.NetworkAccess == NetworkAccess.Internet) await synchronisation.Maintenant();
         };
         return fenetre;
-    }
-
-    private static void Tic(CoupureService coupures)
-    {
-        coupures.Planifier();
-        Minute?.Invoke();
     }
 }

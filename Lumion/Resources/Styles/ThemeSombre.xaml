@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xaml-comp compile="true" ?>
+<!-- Thème sombre : économise la batterie des écrans OLED pendant les coupures. Mêmes clés dans les deux thèmes (variables « Thème » de la maquette Figma). -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    x:Class="Lumion.Resources.Styles.ThemeSombre">
+    <Color x:Key="Fond">#0A1020</Color>
+    <Color x:Key="Surface">#111A2E</Color>
+    <Color x:Key="Surface2">#19233B</Color>
+    <Color x:Key="Bordure">#28344F</Color>
+    <Color x:Key="Texte">#F3F5FA</Color>
+    <Color x:Key="Texte2">#8B97B5</Color>
+    <Color x:Key="Texte3">#5F6B88</Color>
+    <Color x:Key="Accent">#F5A623</Color>
+    <Color x:Key="AccentTexte">#FFC24D</Color>
+    <Color x:Key="AccentDoux">#3A2B0C</Color>
+    <Color x:Key="SurAccent">#0E1A35</Color>
+    <Color x:Key="AccentHalo">#38F5A623</Color>
+    <Color x:Key="AccentHalo2">#1FF5A623</Color>
+    <Color x:Key="Vedette">#19233B</Color>
+    <Color x:Key="VedetteTexte">#F3F5FA</Color>
+    <Color x:Key="VedetteTexte2">#8B97B5</Color>
+    <Color x:Key="VedetteVoile">#14FFFFFF</Color>
+    <Color x:Key="VedetteTrait">#24FFFFFF</Color>
+    <Color x:Key="Normal">#14A44D</Color>
+    <Color x:Key="NormalDoux">#0F2E1E</Color>
+    <Color x:Key="Signalee">#F2711C</Color>
+    <Color x:Key="SignaleeDoux">#3A2312</Color>
+    <Color x:Key="Confirmee">#E02D4F</Color>
+    <Color x:Key="ConfirmeeDoux">#3B1520</Color>
+    <Color x:Key="Delestage">#2563EB</Color>
+    <Color x:Key="DelestageDoux">#14284D</Color>
+    <Color x:Key="Violet">#A78BFA</Color>
+    <Color x:Key="VioletDoux">#2A1C4D</Color>
+    <Color x:Key="GrapheNeutre">#34405C</Color>
+    <Color x:Key="CarteTerre">#141D31</Color>
+    <Color x:Key="CarteEau">#0E2747</Color>
+    <Color x:Key="CarteRoute">#24314E</Color>
+    <Color x:Key="Blanc">#FFFFFF</Color>
+</ResourceDictionary>

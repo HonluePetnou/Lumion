@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:c="clr-namespace:Lumion.Controls"
+             xmlns:vm="clr-namespace:Lumion.ViewModels"
+             x:Class="Lumion.Views.ActivitePage"
+             x:DataType="vm:ActiviteViewModel">
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+        <c:EnTete Titre="Activité" />
+        <c:Choix Grid.Row="1" Segment="True" Options="Historique|Mes signalements" Valeurs="historique|signalements"
+                 Selection="historique" Change="OngletChange" Margin="20,4,20,10" />
+
+        <ScrollView Grid.Row="2">
+            <VerticalStackLayout Padding="20,0,20,24" Spacing="12">
+                <!-- Bilan du mois, quartier modifiable -->
+                <Border Style="{StaticResource BlocVedette}" Padding="16,14" StrokeShape="RoundRectangle 18">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="{Binding Surtitre}" Style="{StaticResource Surtitre}" TextColor="{StaticResource VedetteTexte2}" />
+                            <Label LineBreakMode="TailTruncation">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="{Binding Bilan}" FontFamily="JakartaExtraBold" FontSize="18"
+                                              TextColor="{StaticResource VedetteTexte}" />
+                                        <Span Text="{Binding BilanDetail}" FontFamily="JakartaMedium" FontSize="12"
+                                              TextColor="{StaticResource VedetteTexte2}" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                        </VerticalStackLayout>
+                        <Border Grid.Column="1" Style="{StaticResource Pastille}" BackgroundColor="{StaticResource VedetteVoile}"
+                                Padding="12,8" SemanticProperties.Description="Changer de quartier">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ChangerQuartierCommand}" />
+                            </Border.GestureRecognizers>
+                            <HorizontalStackLayout Spacing="4">
+                                <Label Text="Changer" Style="{StaticResource TexteBadge}" TextColor="{StaticResource VedetteTexte}" />
+                                <c:Icone Nom="ChevronBas" Taille="12" Couleur="{StaticResource VedetteTexte}" />
+                            </HorizontalStackLayout>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Aucune coupure récente -->
+                <VerticalStackLayout Padding="24,40,24,0" Spacing="8" IsVisible="{Binding Vide}">
+                    <c:Icone Nom="Check" Taille="40" Couleur="{StaticResource Normal}" />
+                    <Label Text="Aucune coupure ces deux derniers mois" Style="{StaticResource TexteElement}"
+                           HorizontalTextAlignment="Center" />
+                    <Label Text="Bonne nouvelle : le courant a tenu dans ce quartier." Style="{StaticResource TexteSecondaire}"
+                           HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+
+                <!-- Coupures regroupées par semaine -->
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Groupes}" Spacing="12">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:GroupeCoupures">
+                            <VerticalStackLayout Spacing="8">
+                                <Label Text="{Binding Titre}" Style="{StaticResource Surtitre}" />
+                                <Border Style="{StaticResource Carte}" Padding="14,4">
+                                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding .}">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:LigneCoupure">
+                                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12" Padding="0,10"
+                                                      BackgroundColor="Transparent">
+                                                    <Grid.GestureRecognizers>
+                                                        <TapGestureRecognizer
+                                                            Command="{Binding OuvrirCommand, Source={RelativeSource AncestorType={x:Type vm:ActiviteViewModel}}, x:DataType=vm:ActiviteViewModel}"
+                                                            CommandParameter="{Binding Id}" />
+                                                    </Grid.GestureRecognizers>
+                                                    <Border WidthRequest="48" StrokeThickness="0" StrokeShape="RoundRectangle 12"
+                                                            BackgroundColor="{StaticResource Surface2}" Padding="0,6">
+                                                        <VerticalStackLayout>
+                                                            <Label Text="{Binding Jour}" Style="{StaticResource TitreSection}" FontFamily="JakartaExtraBold"
+                                                                   HorizontalOptions="Center" />
+                                                            <Label Text="{Binding Mois}" Style="{StaticResource TexteBadge}"
+                                                                   TextColor="{StaticResource Texte2}" HorizontalOptions="Center" />
+                                                        </VerticalStackLayout>
+                                                    </Border>
+                                                    <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
+                                                        <HorizontalStackLayout Spacing="8">
+                                                            <Label Text="{Binding Duree}" Style="{StaticResource TexteElement}" FontFamily="JakartaBold"
+                                                                   VerticalOptions="Center" />
+                                                            <Border Style="{StaticResource Pastille}" BackgroundColor="{Binding Clair}" Padding="8,3"
+                                                                    IsVisible="{Binding ABadge}">
+                                                                <HorizontalStackLayout Spacing="5">
+                                                                    <Ellipse WidthRequest="6" HeightRequest="6" Fill="{Binding Couleur}" VerticalOptions="Center" />
+                                                                    <Label Text="{Binding Badge}" Style="{StaticResource TexteBadge}" FontSize="11"
+                                                                           TextColor="{Binding Couleur}" />
+                                                                </HorizontalStackLayout>
+                                                            </Border>
+                                                        </HorizontalStackLayout>
+                                                        <Label Text="{Binding Horaires}" Style="{StaticResource TexteLegende}" />
+                                                    </VerticalStackLayout>
+                                                    <c:Icone Grid.Column="2" Nom="ChevronDroite" Taille="16" Couleur="{StaticResource Texte3}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </VerticalStackLayout>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <c:BarreOnglets Grid.Row="3" Actif="activite" />
+    </Grid>
+</ContentPage>

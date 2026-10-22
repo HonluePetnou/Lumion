@@ -4,8 +4,8 @@ using Microsoft.Maui.Controls.Shapes;
 namespace Lumion.Controls;
 
 /// <summary>
-/// Choix exclusif présenté en puces (bascule, filtres, onglets). L'option active est ambre,
-/// les autres grises ; chaque puce offre une cible tactile de 48 dp.
+/// Choix exclusif, en puces (filtres : l'option active est ambre) ou en contrôle segmenté
+/// (onglets d'un écran : l'option active ressort en blanc sur fond gris). Cibles tactiles de 40 dp au moins.
 /// </summary>
 public class Choix : ContentView
 {
@@ -21,6 +21,9 @@ public class Choix : ContentView
     public static readonly BindableProperty EtireProperty = BindableProperty.Create(nameof(Etire), typeof(bool),
         typeof(Choix), false, propertyChanged: (b, _, _) => ((Choix)b).Construire());
 
+    public static readonly BindableProperty SegmentProperty = BindableProperty.Create(nameof(Segment), typeof(bool),
+        typeof(Choix), false, propertyChanged: (b, _, _) => ((Choix)b).Construire());
+
     /// <summary>Libellés séparés par « | ».</summary>
     public string Options { get => (string)GetValue(OptionsProperty); set => SetValue(OptionsProperty, value); }
     /// <summary>Valeurs associées, séparées par « | ». Par défaut, les libellés eux-mêmes.</summary>
@@ -28,11 +31,13 @@ public class Choix : ContentView
     public string? Selection { get => (string?)GetValue(SelectionProperty); set => SetValue(SelectionProperty, value); }
     /// <summary>Répartit les puces sur toute la largeur au lieu de les aligner à gauche.</summary>
     public bool Etire { get => (bool)GetValue(EtireProperty); set => SetValue(EtireProperty, value); }
+    /// <summary>Contrôle segmenté pleine largeur plutôt que des puces.</summary>
+    public bool Segment { get => (bool)GetValue(SegmentProperty); set => SetValue(SegmentProperty, value); }
 
     /// <summary>Levé quand l'utilisateur choisit une option ; l'argument est sa valeur.</summary>
     public event EventHandler<string>? Change;
 
-    private readonly List<(string Valeur, Border Puce)> _puces = [];
+    private readonly List<(string Valeur, Border Puce, Label Texte)> _puces = [];
 
     private void Construire()
     {
@@ -45,24 +50,22 @@ public class Choix : ContentView
             return;
         }
 
-        var grille = new Grid { ColumnSpacing = Etire ? 6 : 8 };
+        bool etire = Etire || Segment;
+        var grille = new Grid { ColumnSpacing = Segment ? 4 : 8 };
         for (int i = 0; i < libelles.Length; i++)
         {
-            // Étirées, les puces se partagent la largeur au prorata de la longueur de leur libellé.
-            grille.ColumnDefinitions.Add(new ColumnDefinition(Etire
-                ? new GridLength(libelles[i].Length + 6, GridUnitType.Star)
-                : GridLength.Auto));
+            grille.ColumnDefinitions.Add(new ColumnDefinition(etire ? GridLength.Star : GridLength.Auto));
             string valeur = valeurs is not null && i < valeurs.Length ? valeurs[i] : libelles[i];
+            var texte = new Label
+            {
+                Text = libelles[i], FontFamily = "JakartaBold", FontSize = Segment ? 13 : 13,
+                HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center,
+                LineBreakMode = LineBreakMode.NoWrap
+            };
             var puce = new Border
             {
-                StrokeShape = new RoundRectangle { CornerRadius = 18 }, StrokeThickness = 0, HeightRequest = 40,
-                Margin = new Thickness(0, 4), Padding = new Thickness(Etire ? 4 : 16, 0),
-                Content = new Label
-                {
-                    Text = libelles[i], FontFamily = "OpenSansSemibold", FontSize = Etire ? 12 : 14, TextColor = Palette.Encre,
-                    HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center,
-                    LineBreakMode = LineBreakMode.NoWrap
-                }
+                StrokeShape = new RoundRectangle { CornerRadius = Segment ? 10 : 999 },
+                HeightRequest = Segment ? 38 : 38, Padding = new Thickness(etire ? 4 : 16, 0), Content = texte
             };
             SemanticProperties.SetDescription(puce, libelles[i]);
             var toucher = new TapGestureRecognizer();
@@ -74,17 +77,41 @@ public class Choix : ContentView
             };
             puce.GestureRecognizers.Add(toucher);
             grille.Add(puce, i);
-            _puces.Add((valeur, puce));
+            _puces.Add((valeur, puce, texte));
         }
-        Content = grille;
-        // Sans sélection explicite, la première option est active.
-        if (Selection is null || _puces.All(p => p.Valeur != Selection)) Selection = _puces[0].Valeur;
+
+        Content = Segment
+            ? new Border
+            {
+                BackgroundColor = Palette.Surface2, StrokeThickness = 0, StrokeShape = new RoundRectangle { CornerRadius = 14 },
+                Padding = 4, Content = grille
+            }
+            : grille;
         Colorer();
     }
 
     private void Colorer()
     {
-        foreach (var (valeur, puce) in _puces)
-            puce.BackgroundColor = valeur == Selection ? Palette.Primaire : Palette.FondGris;
+        // Sans sélection connue, la première option paraît active ; on n'écrit rien dans la liaison,
+        // qui peut arriver après la construction et ne doit pas être écrasée.
+        var active = _puces.Any(p => p.Valeur == Selection) ? Selection : _puces.FirstOrDefault().Valeur;
+        foreach (var (valeur, puce, texte) in _puces)
+        {
+            bool actif = valeur == active;
+            if (Segment)
+            {
+                puce.BackgroundColor = actif ? Palette.Surface : Colors.Transparent;
+                puce.StrokeThickness = 0;
+                puce.Shadow = actif ? new Shadow { Brush = Colors.Black, Opacity = 0.08f, Radius = 4, Offset = new Point(0, 1) } : null!;
+                texte.TextColor = actif ? Palette.Texte : Palette.Texte2;
+            }
+            else
+            {
+                puce.BackgroundColor = actif ? Palette.Accent : Palette.Surface;
+                puce.Stroke = Palette.Bordure;
+                puce.StrokeThickness = actif ? 0 : 1;
+                texte.TextColor = actif ? Palette.SurAccent : Palette.Texte;
+            }
+        }
     }
 }

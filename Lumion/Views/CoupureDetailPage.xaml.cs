@@ -1,4 +1,3 @@
-using Lumion.Services;
 using Lumion.ViewModels;
 
 namespace Lumion.Views;
@@ -26,7 +25,5 @@ public partial class CoupureDetailPage : ContentPage
         App.Minute -= Actualiser;
     }
 
-    private void Actualiser() => MainThread.BeginInvokeOnMainThread(_vm.Charger);
-
-    private async void Retour(object? sender, TappedEventArgs e) => await Nav.Retour();
+    private void Actualiser() => MainThread.BeginInvokeOnMainThread(async () => await _vm.Charger());
 }

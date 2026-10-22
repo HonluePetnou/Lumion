@@ -1,6 +1,3 @@
-using Lumion.Core;
-using Lumion.Core.Data;
-using Lumion.Core.Services;
 using Lumion.Services;
 using Lumion.ViewModels;
 using Lumion.Views;
@@ -19,36 +16,41 @@ public static class MauiProgram
             .UseSkiaSharp()
             .ConfigureFonts(fonts =>
             {
-                fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-                fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                fonts.AddFont("PlusJakartaSans-Regular.ttf", "Jakarta");
+                fonts.AddFont("PlusJakartaSans-Medium.ttf", "JakartaMedium");
+                fonts.AddFont("PlusJakartaSans-SemiBold.ttf", "JakartaSemiBold");
+                fonts.AddFont("PlusJakartaSans-Bold.ttf", "JakartaBold");
+                fonts.AddFont("PlusJakartaSans-ExtraBold.ttf", "JakartaExtraBold");
             });
+
+        ChampsSansCadre();
 
         var s = builder.Services;
 
-        // Cœur métier (Lumion.Core) : base locale et règles de gestion.
-        s.AddSingleton<IHorloge, HorlogeSysteme>();
-        s.AddSingleton<Parametres>();
-        s.AddSingleton(_ => new LumionDb(Path.Combine(FileSystem.AppDataDirectory, "lumion.db3")));
-        s.AddSingleton<NotificationService>();
-        s.AddSingleton<CoupureService>();
-        s.AddSingleton<StatsService>();
-        s.AddSingleton<AuthService>();
-        s.AddSingleton<AdminService>();
+        // Accès aux données : l'application ne parle qu'à l'API, par HttpClient.
+        // Le « tuyau » est le backend ASP.NET Core ou le serveur embarqué (mode autonome).
+        s.AddSingleton<ServeurEmbarque>();
+        s.AddSingleton<ReglagesConnexion>();
+        s.AddSingleton<LumionApi>();
+        s.AddSingleton<ILumionApi>(sp => sp.GetRequiredService<LumionApi>());
 
-        // Services de l'application mobile.
         s.AddSingleton<Session>();
         s.AddSingleton<Notifieur>();
+        s.AddSingleton<Synchronisation>();
         s.AddSingleton<Localisation>();
         s.AddSingleton<ParcoursAuth>();
 
+        // Vues-modèles des onglets uniques ; pages recréées quand le thème change (Services/Theme).
         s.AddSingleton<AccueilViewModel>();
-        s.AddSingleton<AccueilPage>();
+        s.AddTransient<AccueilPage>();
         s.AddSingleton<StatistiquesViewModel>();
-        s.AddSingleton<StatistiquesPage>();
+        s.AddTransient<StatistiquesPage>();
         s.AddSingleton<MesSignalementsViewModel>();
-        s.AddSingleton<MesSignalementsPage>();
+        s.AddTransient<MesSignalementsPage>();
+        s.AddSingleton<ActiviteViewModel>();
+        s.AddTransient<ActivitePage>();
         s.AddSingleton<ProfilViewModel>();
-        s.AddSingleton<ProfilPage>();
+        s.AddTransient<ProfilPage>();
 
         s.AddTransient<ConnexionPage>();
         s.AddTransient<InscriptionPage>();
@@ -71,5 +73,32 @@ public static class MauiProgram
 #endif
 
         return builder.Build();
+    }
+
+    /// <summary>
+    /// Les champs de saisie sont dessinés par l'application (bordure arrondie, style « Champ ») :
+    /// on retire le cadre, le fond et le soulignement natifs d'Android et de Windows.
+    /// </summary>
+    private static void ChampsSansCadre()
+    {
+#if ANDROID
+        Microsoft.Maui.Handlers.EntryHandler.Mapper.AppendToMapping("SansCadre", (h, _) =>
+            h.PlatformView.BackgroundTintList = Android.Content.Res.ColorStateList.ValueOf(Android.Graphics.Color.Transparent));
+        Microsoft.Maui.Handlers.EditorHandler.Mapper.AppendToMapping("SansCadre", (h, _) =>
+            h.PlatformView.BackgroundTintList = Android.Content.Res.ColorStateList.ValueOf(Android.Graphics.Color.Transparent));
+        Microsoft.Maui.Handlers.PickerHandler.Mapper.AppendToMapping("SansCadre", (h, _) =>
+            h.PlatformView.BackgroundTintList = Android.Content.Res.ColorStateList.ValueOf(Android.Graphics.Color.Transparent));
+#elif WINDOWS
+        static void Aplatir(Microsoft.UI.Xaml.Controls.Control c)
+        {
+            c.BorderThickness = new Microsoft.UI.Xaml.Thickness(0);
+            c.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent);
+        }
+        Microsoft.Maui.Handlers.EntryHandler.Mapper.AppendToMapping("SansCadre", (h, _) => Aplatir(h.PlatformView));
+        Microsoft.Maui.Handlers.EditorHandler.Mapper.AppendToMapping("SansCadre", (h, _) => Aplatir(h.PlatformView));
+        Microsoft.Maui.Handlers.PickerHandler.Mapper.AppendToMapping("SansCadre", (h, _) => Aplatir(h.PlatformView));
+        // WinUI affiche le titre du sélecteur en en-tête, au-dessus de la valeur : l'icône voisine suffit.
+        Microsoft.Maui.Handlers.PickerHandler.Mapper.AppendToMapping(nameof(IPicker.Title), (h, _) => h.PlatformView.Header = null);
+#endif
     }
 }

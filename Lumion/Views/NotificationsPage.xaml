@@ -4,49 +4,61 @@
              xmlns:c="clr-namespace:Lumion.Controls"
              xmlns:v="clr-namespace:Lumion.Views"
              x:Class="Lumion.Views.NotificationsPage">
-    <Grid RowDefinitions="Auto,*,Auto">
-        <Grid ColumnDefinitions="48,*" Padding="12,8,16,8" BackgroundColor="{StaticResource Blanc}">
-            <Grid BackgroundColor="Transparent" HeightRequest="48" SemanticProperties.Description="Retour">
-                <Grid.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="Retour" />
-                </Grid.GestureRecognizers>
-                <c:Icone Nom="ChevronGauche" />
-            </Grid>
-            <VerticalStackLayout Grid.Column="1">
-                <Label Text="Notifications" Style="{StaticResource TitrePage}" FontSize="22" />
-                <Label Text="Alertes de vos quartiers abonnés" Style="{StaticResource SousTitrePage}" />
-            </VerticalStackLayout>
-        </Grid>
+    <Grid RowDefinitions="Auto,*">
+        <c:EnTete Titre="Notifications" Retour="True" />
 
-        <CollectionView Grid.Row="1" x:Name="Liste" SelectionMode="Single" SelectionChanged="Ouvrir">
-            <CollectionView.EmptyView>
-                <VerticalStackLayout Padding="32,64,32,0" Spacing="8">
-                    <c:Icone Nom="Cloche" Taille="44" Couleur="{StaticResource GrisClair}" />
-                    <Label Text="Aucune notification" Style="{StaticResource TitreElement}" HorizontalTextAlignment="Center" />
-                    <Label Text="Vous serez prévenu au début et à la fin d'une coupure dans vos quartiers abonnés."
-                           Style="{StaticResource Discret}" HorizontalTextAlignment="Center" />
-                </VerticalStackLayout>
-            </CollectionView.EmptyView>
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="v:LigneNotification">
-                    <Grid Padding="16,6">
-                        <Border Style="{StaticResource Carte}" Padding="14,12">
-                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                <Border Style="{StaticResource Rond}" BackgroundColor="{Binding Couleur}" VerticalOptions="Start">
-                                    <c:Icone Nom="{Binding Icone}" Couleur="{StaticResource Blanc}" Taille="20" />
-                                </Border>
-                                <VerticalStackLayout Grid.Column="1" Spacing="2">
-                                    <Label Text="{Binding Titre}" Style="{StaticResource TitreElement}" />
-                                    <Label Text="{Binding Message}" FontSize="13" />
-                                    <Label Text="{Binding Date}" Style="{StaticResource Discret}" FontSize="12" />
-                                </VerticalStackLayout>
-                            </Grid>
-                        </Border>
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="20,8,20,24" Spacing="10">
+                <!-- Aucune notification -->
+                <VerticalStackLayout x:Name="Vide" Padding="12,48,12,0" Spacing="12" IsVisible="False">
+                    <Grid WidthRequest="150" HeightRequest="150" HorizontalOptions="Center">
+                        <Ellipse Fill="{StaticResource AccentHalo2}" />
+                        <Ellipse Fill="{StaticResource AccentHalo}" Margin="22" />
+                        <Ellipse Fill="{StaticResource AccentDoux}" Margin="42" />
+                        <c:Icone Nom="Cloche" Taille="36" Couleur="{StaticResource AccentTexte}" />
                     </Grid>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+                    <Label Text="Aucune notification" Style="{StaticResource TitreSection}" HorizontalTextAlignment="Center" />
+                    <Label Text="Vous serez prévenu au début et à la fin d'une coupure dans les quartiers que vous suivez."
+                           Style="{StaticResource TexteSecondaire}" HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
 
-        <c:BarreOnglets Grid.Row="2" Actif="accueil" />
+                <!-- Notifications par jour -->
+                <VerticalStackLayout x:Name="Groupes" Spacing="10">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="v:GroupeNotifications">
+                            <VerticalStackLayout Spacing="8">
+                                <Label Text="{Binding Titre}" Style="{StaticResource Surtitre}" Margin="0,6,0,0" />
+                                <Border Style="{StaticResource Carte}" Padding="14,2">
+                                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding .}">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="v:LigneNotification">
+                                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12" Padding="0,12"
+                                                      BackgroundColor="Transparent">
+                                                    <Grid.GestureRecognizers>
+                                                        <TapGestureRecognizer Tapped="Ouvrir" CommandParameter="{Binding QuartierId}" />
+                                                    </Grid.GestureRecognizers>
+                                                    <Border Style="{StaticResource Tuile}" BackgroundColor="{Binding Clair}" VerticalOptions="Start">
+                                                        <c:Icone Nom="{Binding Icone}" Taille="18" Couleur="{Binding Couleur}" />
+                                                    </Border>
+                                                    <VerticalStackLayout Grid.Column="1" Spacing="3">
+                                                        <Label Text="{Binding Titre}" Style="{StaticResource TexteElement}" FontFamily="{Binding Police}" />
+                                                        <Label Text="{Binding Message}" Style="{StaticResource TexteSecondaire}" />
+                                                    </VerticalStackLayout>
+                                                    <VerticalStackLayout Grid.Column="2" Spacing="6">
+                                                        <Label Text="{Binding Heure}" Style="{StaticResource TexteBadge}" TextColor="{StaticResource Texte3}" />
+                                                        <Ellipse WidthRequest="8" HeightRequest="8" Fill="{StaticResource Accent}" HorizontalOptions="End"
+                                                                 IsVisible="{Binding NonLue}" />
+                                                    </VerticalStackLayout>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </VerticalStackLayout>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
     </Grid>
 </ContentPage>

@@ -5,13 +5,11 @@ namespace Lumion.Views;
 
 public partial class InscriptionPage : ContentPage
 {
-    private readonly AuthService _auth;
     private readonly ParcoursAuth _parcours;
 
-    public InscriptionPage(AuthService auth, ParcoursAuth parcours)
+    public InscriptionPage(ParcoursAuth parcours)
     {
         InitializeComponent();
-        _auth = auth;
         _parcours = parcours;
         // Numéro déjà saisi sur l'écran de connexion.
         if (_parcours.Telephone.Length == 13) Numero.Text = _parcours.Telephone[4..];
@@ -22,19 +20,15 @@ public partial class InscriptionPage : ContentPage
     {
         var nom = Nom.Text ?? "";
         Compteur.Text = $"{nom.Trim().Length}/30";
-        var erreurNom = nom.Length == 0 ? null : AuthService.ValiderNom(nom);
-        Afficher(ErreurNom, ChampNom, erreurNom);
+        Afficher(ErreurNom, ChampNom, nom.Length == 0 ? null : AuthService.ValiderNom(nom));
 
         var saisie = Numero.Text ?? "";
         var telephone = AuthService.Normaliser(saisie);
-        string? erreurNumero = null;
-        if (saisie.Count(char.IsDigit) >= 9 && telephone is null)
-            erreurNumero = "Saisissez un numéro mobile à 9 chiffres commençant par 6.";
-        else if (telephone is not null && _auth.Trouver(telephone) is not null)
-            erreurNumero = "Ce numéro a déjà un compte. Utilisez « J'ai déjà un compte ».";
-        Afficher(ErreurNumero, ChampNumero, erreurNumero);
+        Afficher(ErreurNumero, ChampNumero, saisie.Count(char.IsDigit) >= 9 && telephone is null
+            ? "Saisissez un numéro mobile à 9 chiffres commençant par 6."
+            : null);
 
-        Suivant.IsEnabled = AuthService.ValiderNom(nom) is null && telephone is not null && erreurNumero is null;
+        Suivant.IsEnabled = AuthService.ValiderNom(nom) is null && telephone is not null;
     }
 
     private static void Afficher(Label etiquette, Border champ, string? erreur)
@@ -49,14 +43,32 @@ public partial class InscriptionPage : ContentPage
         var telephone = AuthService.Normaliser(Numero.Text);
         if (telephone is null || AuthService.ValiderNom(Nom.Text) is not null) return;
 
-        _parcours.Commencer(telephone, Nom.Text!.Trim(), inscription: true);
-        int attente = _parcours.DemanderCode();
-        if (attente > 0)
+        Suivant.IsEnabled = false;
+        try
         {
-            Afficher(ErreurNumero, ChampNumero, $"Trop de tentatives. Réessayez dans {attente} secondes.");
-            return;
+            _parcours.Commencer(telephone, Nom.Text!.Trim(), inscription: true);
+            int attente = await _parcours.DemanderCode();
+            if (_parcours.CompteExiste)
+            {
+                // Le numéro a déjà un compte : on poursuit comme une connexion.
+                _parcours.Commencer(telephone, "", inscription: false);
+                await Nav.Alerte("Compte existant", "Ce numéro a déjà un compte : saisissez le code pour vous connecter.");
+            }
+            if (attente > 0)
+            {
+                Afficher(ErreurNumero, ChampNumero, $"Trop de tentatives. Réessayez dans {attente} secondes.");
+                return;
+            }
+            await Nav.Aller("otp");
         }
-        await Nav.Aller("otp");
+        catch (Exception ex) when (ex is HttpRequestException or ApiException)
+        {
+            Afficher(ErreurNumero, ChampNumero, Nav.Message(ex));
+        }
+        finally
+        {
+            Suivant.IsEnabled = true;
+        }
     }
 
     private async void Retour(object? sender, EventArgs e) => await Nav.Retour();

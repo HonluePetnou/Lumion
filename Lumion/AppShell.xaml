@@ -5,16 +5,16 @@
        x:Class="Lumion.AppShell"
        FlyoutBehavior="Disabled">
 
-    <!-- Navigation plate : quatre onglets permanents, la carte en écran d'accueil. -->
+    <!--
+        Navigation plate, la carte en écran d'accueil. La barre visible est Controls/BarreOnglets :
+        l'onglet Activité regroupe l'historique (activite) et les signalements de l'habitant (signalements).
+    -->
     <TabBar>
-        <ShellContent Title="Accueil" Icon="tab_accueil.png" Route="accueil"
-                      ContentTemplate="{DataTemplate v:AccueilPage}" />
-        <ShellContent Title="Statistiques" Icon="tab_stats.png" Route="statistiques"
-                      ContentTemplate="{DataTemplate v:StatistiquesPage}" />
-        <ShellContent Title="Signalements" Icon="tab_signalements.png" Route="signalements"
-                      ContentTemplate="{DataTemplate v:MesSignalementsPage}" />
-        <ShellContent Title="Profil" Icon="tab_profil.png" Route="profil"
-                      ContentTemplate="{DataTemplate v:ProfilPage}" />
+        <ShellContent Title="Carte" Route="accueil" ContentTemplate="{DataTemplate v:AccueilPage}" />
+        <ShellContent Title="Stats" Route="statistiques" ContentTemplate="{DataTemplate v:StatistiquesPage}" />
+        <ShellContent Title="Activité" Route="activite" ContentTemplate="{DataTemplate v:ActivitePage}" />
+        <ShellContent Title="Mes signalements" Route="signalements" ContentTemplate="{DataTemplate v:MesSignalementsPage}" />
+        <ShellContent Title="Profil" Route="profil" ContentTemplate="{DataTemplate v:ProfilPage}" />
     </TabBar>
 
 </Shell>

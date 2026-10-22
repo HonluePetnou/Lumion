@@ -5,26 +5,14 @@
              xmlns:vm="clr-namespace:Lumion.ViewModels"
              x:Class="Lumion.Views.HistoriquePage"
              x:DataType="vm:HistoriqueViewModel">
-    <Grid RowDefinitions="Auto,Auto,*,Auto">
-        <Grid ColumnDefinitions="48,*" Padding="12,8,16,0" BackgroundColor="{StaticResource Blanc}">
-            <Grid BackgroundColor="Transparent" HeightRequest="48" SemanticProperties.Description="Retour">
-                <Grid.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="Retour" />
-                </Grid.GestureRecognizers>
-                <c:Icone Nom="ChevronGauche" />
-            </Grid>
-            <VerticalStackLayout Grid.Column="1">
-                <Label Text="Historique" Style="{StaticResource TitrePage}" FontSize="22" />
-                <Label Text="{Binding NomQuartier, StringFormat='Coupures passées à {0}'}" Style="{StaticResource SousTitrePage}" />
-            </VerticalStackLayout>
-        </Grid>
+    <Grid RowDefinitions="Auto,Auto,*">
+        <c:EnTete Titre="{Binding NomQuartier, StringFormat='Historique · {0}'}" Retour="True" />
 
-        <VerticalStackLayout Grid.Row="1" Padding="16,12,16,8" Spacing="8" BackgroundColor="{StaticResource Blanc}">
-            <c:Choix Options="7 jours|30 jours|Mois choisi" Valeurs="7|30|mois" Selection="{Binding Periode}"
-                     HorizontalOptions="Start" />
+        <VerticalStackLayout Grid.Row="1" Padding="20,4,20,8" Spacing="10">
+            <c:Choix Options="7 jours|30 jours|Un mois" Valeurs="7|30|mois" Selection="{Binding Periode}" />
             <Border Style="{StaticResource Champ}" IsVisible="{Binding MoisVisible}">
                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                    <c:Icone Nom="Calendrier" Taille="20" />
+                    <c:Icone Nom="Calendrier" Taille="18" Couleur="{StaticResource AccentTexte}" />
                     <Picker Grid.Column="1" Title="Mois" ItemsSource="{Binding Mois}" SelectedItem="{Binding MoisChoisi}" />
                 </Grid>
             </Border>
@@ -34,47 +22,56 @@
                         RemainingItemsThresholdReachedCommand="{Binding ChargerSuiteCommand}">
             <CollectionView.EmptyView>
                 <VerticalStackLayout Padding="32,64,32,0" Spacing="8">
-                    <c:Icone Nom="Check" Taille="40" Couleur="{StaticResource Vert}" />
-                    <Label Text="Aucune coupure enregistrée sur cette période" Style="{StaticResource TitreElement}"
+                    <c:Icone Nom="Check" Taille="40" Couleur="{StaticResource Normal}" />
+                    <Label Text="Aucune coupure sur cette période" Style="{StaticResource TexteElement}"
                            HorizontalTextAlignment="Center" />
-                    <Label Text="Essayez une période plus longue ou un autre mois." Style="{StaticResource Discret}"
+                    <Label Text="Essayez une période plus longue ou un autre mois." Style="{StaticResource TexteSecondaire}"
                            HorizontalTextAlignment="Center" />
                 </VerticalStackLayout>
             </CollectionView.EmptyView>
+            <CollectionView.Footer>
+                <BoxView HeightRequest="16" Color="Transparent" />
+            </CollectionView.Footer>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="vm:LigneCoupure">
-                    <Grid Padding="16,6">
-                        <Border Style="{StaticResource Carte}" Padding="14,12">
+                    <Grid Padding="20,4">
+                        <Border Style="{StaticResource Carte}" Padding="12" StrokeShape="RoundRectangle 16">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer
                                     Command="{Binding OuvrirCommand, Source={RelativeSource AncestorType={x:Type vm:HistoriqueViewModel}}, x:DataType=vm:HistoriqueViewModel}"
                                     CommandParameter="{Binding Id}" />
                             </Border.GestureRecognizers>
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-                                <Border Style="{StaticResource Rond}" BackgroundColor="{Binding Couleur}" VerticalOptions="Start">
-                                    <c:Icone Nom="{Binding Icone}" Couleur="{StaticResource Blanc}" Taille="22" />
+                                <Border WidthRequest="48" StrokeThickness="0" StrokeShape="RoundRectangle 12"
+                                        BackgroundColor="{StaticResource Surface2}" Padding="0,6">
+                                    <VerticalStackLayout>
+                                        <Label Text="{Binding Jour}" Style="{StaticResource TitreSection}" FontFamily="JakartaExtraBold"
+                                               HorizontalOptions="Center" />
+                                        <Label Text="{Binding Mois}" Style="{StaticResource TexteBadge}" TextColor="{StaticResource Texte2}"
+                                               HorizontalOptions="Center" />
+                                    </VerticalStackLayout>
                                 </Border>
-                                <VerticalStackLayout Grid.Column="1" Spacing="2">
-                                    <Label Text="{Binding Date}" Style="{StaticResource TitreElement}" />
-                                    <Label Text="{Binding Horaires}" Style="{StaticResource Discret}" />
-                                    <Label Text="{Binding Duree}" FontFamily="OpenSansSemibold" TextColor="{StaticResource Encre}" />
+                                <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
                                     <HorizontalStackLayout Spacing="8">
-                                        <Border Style="{StaticResource Pastille}" BackgroundColor="{Binding Clair}" Padding="8,3">
-                                            <Label Text="{Binding Type}" TextColor="{Binding Couleur}" FontSize="11"
-                                                   FontFamily="OpenSansSemibold" />
-                                        </Border>
-                                        <Label Text="{Binding Signalements}" Style="{StaticResource Discret}" FontSize="12"
+                                        <Label Text="{Binding Duree}" Style="{StaticResource TexteElement}" FontFamily="JakartaBold"
                                                VerticalOptions="Center" />
+                                        <Border Style="{StaticResource Pastille}" BackgroundColor="{Binding Clair}" Padding="8,3"
+                                                IsVisible="{Binding ABadge}">
+                                            <HorizontalStackLayout Spacing="5">
+                                                <Ellipse WidthRequest="6" HeightRequest="6" Fill="{Binding Couleur}" VerticalOptions="Center" />
+                                                <Label Text="{Binding Badge}" Style="{StaticResource TexteBadge}" FontSize="11"
+                                                       TextColor="{Binding Couleur}" />
+                                            </HorizontalStackLayout>
+                                        </Border>
                                     </HorizontalStackLayout>
+                                    <Label Text="{Binding Horaires}" Style="{StaticResource TexteLegende}" />
                                 </VerticalStackLayout>
-                                <c:Icone Grid.Column="2" Nom="ChevronDroite" Taille="18" Couleur="{StaticResource GrisClair}" />
+                                <c:Icone Grid.Column="2" Nom="ChevronDroite" Taille="16" Couleur="{StaticResource Texte3}" />
                             </Grid>
                         </Border>
                     </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-
-        <c:BarreOnglets Grid.Row="3" Actif="accueil" />
     </Grid>
 </ContentPage>

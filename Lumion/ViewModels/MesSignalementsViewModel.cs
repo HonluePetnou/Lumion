@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Lumion.Core;
 using Lumion.Core.Models;
-using Lumion.Core.Services;
+using Lumion.Core.Api;
 using Lumion.Services;
 
 namespace Lumion.ViewModels;
@@ -13,60 +13,94 @@ public record LigneSignalement(int Id, int CoupureId, string Titre, string Quart
     bool Annulable, string Reste)
 {
     public bool ACommentaire => !string.IsNullOrEmpty(Commentaire);
+    public string Sous => $"{Titre} · {Date}";
 }
 
 /// <summary>Écran E06 : contributions de l'habitant et leur statut (UC11).</summary>
 public partial class MesSignalementsViewModel : ObservableObject
 {
-    private readonly CoupureService _coupures;
+    private readonly ILumionApi _api;
     private readonly Session _session;
-    private readonly IHorloge _horloge;
-    private readonly Parametres _parametres;
 
     [ObservableProperty] private string _filtre = "Tous";
     [ObservableProperty] private string _mentionEnAttente = "";
     [ObservableProperty] private bool _enAttenteVisible;
     [ObservableProperty] private string _titreVide = "";
     [ObservableProperty] private string _texteVide = "";
+    [ObservableProperty] private int _fiabilite;
+    [ObservableProperty] private string _fiabiliteTitre = "";
+    [ObservableProperty] private string _fiabiliteDetail = "";
+    [ObservableProperty] private Color _fiabiliteCouleur = Palette.Vert;
 
     public Session Session => _session;
     public ObservableCollection<LigneSignalement> Signalements { get; } = [];
 
-    public MesSignalementsViewModel(CoupureService coupures, Session session, IHorloge horloge, Parametres parametres)
+    public MesSignalementsViewModel(ILumionApi api, Session session, Synchronisation synchronisation)
     {
-        _coupures = coupures;
+        _api = api;
         _session = session;
-        _horloge = horloge;
-        _parametres = parametres;
-        _coupures.QuartierChange += _ => MainThread.BeginInvokeOnMainThread(Charger);
-        App.Minute += () => MainThread.BeginInvokeOnMainThread(Charger);
-        _session.PropertyChanged += (_, e) =>
+        synchronisation.Change += () => MainThread.BeginInvokeOnMainThread(async () => await Charger());
+        App.Minute += () => MainThread.BeginInvokeOnMainThread(Afficher);
+        _session.PropertyChanged += async (_, e) =>
         {
-            if (e.PropertyName == nameof(Session.Utilisateur)) Charger();
+            if (e.PropertyName == nameof(Session.Utilisateur)) await Charger();
         };
     }
 
-    partial void OnFiltreChanged(string value) => Charger();
+    private List<MonSignalement> _tous = [];
+    private DateTime _charge = DateTime.UtcNow;
 
-    public void Charger()
+    partial void OnFiltreChanged(string value) => Afficher();
+
+    public async Task Charger()
+    {
+        if (_session.Utilisateur is null)
+        {
+            _tous = [];
+        }
+        else
+        {
+            try
+            {
+                _tous = await _api.MesSignalements();
+                _charge = DateTime.UtcNow;
+            }
+            catch (Exception e) when (e is HttpRequestException or ApiException) { }
+        }
+        Afficher();
+    }
+
+    private void Afficher()
     {
         Signalements.Clear();
-        if (_session.Utilisateur is not { } utilisateur)
+        if (_session.Utilisateur is null)
         {
             EnAttenteVisible = false;
             return;
         }
 
-        int enAttente = _coupures.NbEnAttente(utilisateur.Id);
+        int enAttente = _api.NbEnAttente;
         EnAttenteVisible = enAttente > 0;
-        MentionEnAttente = $"{enAttente} signalement{(enAttente > 1 ? "s" : "")} en attente d'envoi (hors ligne)";
+        MentionEnAttente = enAttente > 1 ? $"{enAttente} signalements en attente" : "1 signalement en attente";
 
-        var maintenant = _horloge.UtcNow;
-        var quartiers = _coupures.Quartiers(inclureInactifs: true).ToDictionary(q => q.Id, q => q.Nom);
-        foreach (var s in _coupures.MesSignalements(utilisateur.Id))
+        // Score de fiabilité (RG06) : il pèse sur la confirmation des coupures signalées.
+        Fiabilite = _session.Utilisateur.ScoreFiabilite;
+        var (niveau, couleurNiveau) = Fiabilite switch
         {
+            >= 80 => ("Élevée", Palette.Vert),
+            >= 50 => ("Moyenne", Palette.AccentTexte),
+            _ => ("Faible", Palette.Rouge)
+        };
+        int valides = _tous.Count(m => m.Signalement.Statut == StatutSignalement.Valide);
+        FiabiliteTitre = $"Votre fiabilité : {Fiabilite} %";
+        FiabiliteDetail = $"{niveau} · {_tous.Count} signalement{(_tous.Count > 1 ? "s" : "")}, {valides} validé{(valides > 1 ? "s" : "")}.";
+        FiabiliteCouleur = couleurNiveau;
+
+        var maintenant = DateTime.UtcNow;
+        foreach (var mien in _tous)
+        {
+            var s = mien.Signalement;
             if (!Correspond(s.Statut)) continue;
-            var coupure = _coupures.CoupureParId(s.CoupureId);
             var (titre, couleur, icone) = s.Type switch
             {
                 TypeSignalement.Coupure => ("Coupure signalée", Palette.Orange, "Eclair"),
@@ -74,12 +108,11 @@ public partial class MesSignalementsViewModel : ObservableObject
                 _ => ("Retour", Palette.Bleu, "Retour")
             };
             var (couleurStatut, clairStatut, iconeStatut, statut) = Palette.Statut(s.Statut);
-            bool annulable = _coupures.PeutAnnuler(s);
-            int reste = annulable
-                ? Math.Max(1, (int)Math.Ceiling((s.CreeLe.AddMinutes(_parametres.DelaiAnnulationMin) - maintenant).TotalMinutes))
-                : 0;
+            // Délai d'annulation recalculé chaque minute à partir de l'heure de création (UC11 A1).
+            int reste = mien.Annulable ? mien.MinutesRestantes - (int)(maintenant - _charge).TotalMinutes : 0;
+            bool annulable = reste > 0;
             Signalements.Add(new LigneSignalement(s.Id, s.CoupureId, titre,
-                coupure is null ? "" : quartiers.GetValueOrDefault(coupure.QuartierId, ""),
+                mien.Quartier,
                 Heure.Relative(s.CreeLe, maintenant).Replace(",", " à"), s.Commentaire, statut, couleurStatut,
                 clairStatut, iconeStatut, couleur, icone, annulable, $"Il reste {reste} min"));
         }
@@ -105,12 +138,17 @@ public partial class MesSignalementsViewModel : ObservableObject
     [RelayCommand]
     private async Task Annuler(LigneSignalement ligne)
     {
-        if (_session.Utilisateur is not { } utilisateur) return;
         if (!await Nav.Confirmer("Annuler ce signalement ?", "Il sera retiré et les compteurs du quartier recalculés.", "Annuler le signalement"))
             return;
-        var resultat = _coupures.Annuler(ligne.Id, utilisateur.Id);
-        if (!resultat.Ok) await Nav.Alerte("Annulation impossible", resultat.Message);
-        Charger();
+        try
+        {
+            await _api.AnnulerSignalement(ligne.Id);
+        }
+        catch (Exception e) when (e is HttpRequestException or ApiException)
+        {
+            await Nav.Erreur(e, "Annulation impossible");
+        }
+        await Charger();
     }
 
     [RelayCommand]

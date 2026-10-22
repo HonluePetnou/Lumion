@@ -1,3 +1,4 @@
+using Lumion.Core.Api;
 using Lumion.Core.Services;
 using Lumion.Services;
 
@@ -6,38 +7,40 @@ namespace Lumion.Views;
 public partial class OtpPage : ContentPage
 {
     private const int DelaiRenvoi = 45;
-    private readonly AuthService _auth;
+    private readonly ILumionApi _api;
+    private readonly Session _session;
     private readonly ParcoursAuth _parcours;
     private readonly List<(Border Case, Label Chiffre)> _cases = [];
     private IDispatcherTimer? _minuteur;
     private int _secondes;
 
-    public OtpPage(AuthService auth, ParcoursAuth parcours)
+    public OtpPage(ILumionApi api, Session session, ParcoursAuth parcours)
     {
         InitializeComponent();
-        _auth = auth;
+        _api = api;
+        _session = session;
         _parcours = parcours;
 
         for (int i = 0; i < 6; i++)
         {
             var chiffre = new Label
             {
-                FontFamily = "OpenSansSemibold", FontSize = 24, TextColor = Palette.Encre,
+                FontFamily = "JakartaExtraBold", FontSize = 24, TextColor = Palette.Texte,
                 HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center
             };
             var boite = new Border
             {
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 14 },
-                Stroke = Palette.Bordure, StrokeThickness = 1.5, BackgroundColor = Palette.Blanc, Content = chiffre,
+                Stroke = Palette.Bordure, StrokeThickness = 1.5, BackgroundColor = Palette.Surface, Content = chiffre,
                 InputTransparent = true
             };
             Cases.Add(boite, i);
             _cases.Add((boite, chiffre));
         }
 
-        Numero.Text = AuthService.Formater(_parcours.Telephone);
-        Consigne.Text = $"Nous avons envoyé un code de vérification de 6 chiffres par SMS au {AuthService.Formater(_parcours.Telephone)}.";
-        Suite.IsVisible = _parcours.Inscription;
+        Consigne.Text = $"Envoyé au {AuthService.Formater(_parcours.Telephone)} ·";
+        // Les étapes ne concernent que l'inscription ; une simple connexion n'en a qu'une.
+        Suite.IsVisible = Progression.IsVisible = _parcours.Inscription;
         Dessiner();
         AfficherDemo();
     }
@@ -55,8 +58,9 @@ public partial class OtpPage : ContentPage
         _minuteur?.Stop();
     }
 
-    private void AfficherDemo() =>
-        TexteDemo.Text = $"Mode démonstration : aucun SMS n'est réellement envoyé. Votre code est {_parcours.CodeDemo}.";
+    private void AfficherDemo() => TexteDemo.Text = _parcours.CodeDemo is { } code
+        ? $"Mode démo : aucun SMS n'est envoyé, votre code est {code}."
+        : "Aucun SMS n'est envoyé : pour ce compte, le code est affiché dans la console du serveur.";
 
     private void Demarrer(int secondes)
     {
@@ -77,7 +81,8 @@ public partial class OtpPage : ContentPage
     private void ActualiserCompte()
     {
         Renvoi.IsEnabled = _secondes <= 0;
-        Compte.Text = _secondes > 0 ? $"Renvoyer dans 00:{_secondes:00}" : "Vous pouvez demander un nouveau code.";
+        Compte.Text = _secondes > 0 ? $"Renvoyer le code dans 0:{_secondes:00}" : "Pas reçu ?";
+        Renvoi.IsVisible = _secondes <= 0;
     }
 
     private void Saisir(object? sender, EventArgs e) => Code.Focus();
@@ -102,8 +107,9 @@ public partial class OtpPage : ContentPage
         {
             bool remplie = i < texte.Length, active = i == texte.Length;
             _cases[i].Chiffre.Text = remplie ? texte[i].ToString() : "–";
-            _cases[i].Chiffre.TextColor = remplie ? Palette.Encre : Palette.Bordure;
-            _cases[i].Case.Stroke = erreur ? Palette.Rouge : active ? Palette.Primaire : Palette.Bordure;
+            _cases[i].Chiffre.TextColor = remplie ? Palette.Texte : Palette.Texte3;
+            _cases[i].Case.Stroke = erreur ? Palette.Rouge : active ? Palette.Accent : Palette.Bordure;
+            _cases[i].Case.StrokeThickness = active && !erreur ? 2 : 1.5;
         }
     }
 
@@ -116,7 +122,19 @@ public partial class OtpPage : ContentPage
     private async void Verifier(object? sender, EventArgs e)
     {
         if ((Code.Text ?? "").Length != 6) return;
-        var resultat = _auth.VerifierCode(_parcours.Telephone, Code.Text!);
+        Valider.IsEnabled = false;
+        ResultatVerification resultat;
+        try
+        {
+            resultat = await _api.VerifierCode(new VerificationCode(_parcours.Telephone, Code.Text!));
+        }
+        catch (Exception ex) when (ex is HttpRequestException or ApiException)
+        {
+            Afficher(Nav.Message(ex));
+            Valider.IsEnabled = true;
+            return;
+        }
+        Valider.IsEnabled = true;
         if (resultat.Etat != EtatOtp.Valide)
         {
             Afficher(resultat.Message);
@@ -132,18 +150,32 @@ public partial class OtpPage : ContentPage
             return;
         }
 
-        if (_parcours.Inscription)
+        if (resultat.InscriptionRequise)
         {
+            // Code juste : il resservira à l'étape 3, qui crée le compte avec le quartier choisi.
+            _parcours.Code = Code.Text!;
             await Nav.Aller("choixquartier");
             return;
         }
-        _auth.Ouvrir(_auth.Trouver(_parcours.Telephone)!);
-        await Nav.Racine();
+        if (resultat.Session is { } session)
+        {
+            await _session.OuvrirAsync(session);
+            await Nav.Racine();
+        }
     }
 
-    private void Renvoyer(object? sender, EventArgs e)
+    private async void Renvoyer(object? sender, EventArgs e)
     {
-        int attente = _parcours.DemanderCode();
+        int attente;
+        try
+        {
+            attente = await _parcours.DemanderCode();
+        }
+        catch (Exception ex) when (ex is HttpRequestException or ApiException)
+        {
+            Afficher(Nav.Message(ex));
+            return;
+        }
         if (attente > 0)
         {
             Demarrer(attente);

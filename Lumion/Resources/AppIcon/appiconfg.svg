@@ -1,1 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="456" height="456" viewBox="0 0 456 456"><circle cx="228" cy="228" r="96" fill="#FDB022"/><path d="M240 160 L186 240 H224 L214 300 L272 216 H234 Z" fill="#0F1B3D"/></svg>
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Premier plan de l'icône : le « o » ampoule du logo Lumion, ses trois rayons et une lueur ambre. -->
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="lueur" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#F5A623" stop-opacity="0.34" />
+      <stop offset="1" stop-color="#F5A623" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <circle cx="256" cy="309.3" r="190" fill="url(#lueur)" />
+  <g transform="translate(256 256) scale(0.74) translate(-256 -256)">
+    <path d="M 256.0 81.1 L 256.0 133.5 M 151.3 120.4 L 190.5 159.6 M 360.7 120.4 L 321.5 159.6" fill="none" stroke="#F5A623" stroke-width="28.8" stroke-linecap="round" />
+    <circle cx="256" cy="328" r="87.4" fill="none" stroke="#F5A623" stroke-width="55.2" />
+  </g>
+</svg>

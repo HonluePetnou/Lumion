@@ -1,8 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Lumion.Core;
+using Lumion.Core.Api;
 using Lumion.Core.Models;
-using Lumion.Core.Services;
 using Lumion.Services;
 using Point = Lumion.Core.Point;
 
@@ -11,9 +11,10 @@ namespace Lumion.ViewModels;
 /// <summary>Écran E03 : signaler une coupure en trois actions au plus (UC06).</summary>
 public partial class SignalerViewModel : ObservableObject, IQueryAttributable
 {
-    private readonly CoupureService _coupures;
+    private readonly ILumionApi _api;
     private readonly Session _session;
     private readonly Localisation _localisation;
+    private readonly Synchronisation _synchronisation;
     private List<Quartier> _quartiers = [];
     private Point? _position;
     private Quartier? _quartierGps;
@@ -26,28 +27,36 @@ public partial class SignalerViewModel : ObservableObject, IQueryAttributable
     [ObservableProperty] private Color _couleurGps = Palette.Gris;
     [ObservableProperty] private string _iconeGps = "Cible";
     [ObservableProperty] private bool _envoiEnCours;
-    [ObservableProperty] private bool _horsLigne;
 
     public string Compteur => $"{Commentaire.Length}/200";
+    public bool Pret => !EnvoiEnCours;
     public string NomQuartier => Quartier?.Nom ?? "Choisir un quartier";
 
-    public SignalerViewModel(CoupureService coupures, Session session, Localisation localisation)
+    public SignalerViewModel(ILumionApi api, Session session, Localisation localisation, Synchronisation synchronisation)
     {
-        _coupures = coupures;
+        _api = api;
         _session = session;
         _localisation = localisation;
+        _synchronisation = synchronisation;
     }
 
-    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    public async void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        _quartiers = _coupures.Quartiers();
+        try
+        {
+            _quartiers = (await _api.Quartiers()).Select(e => e.Quartier).ToList();
+        }
+        catch (Exception e) when (e is HttpRequestException or ApiException)
+        {
+            _quartiers = [];
+        }
         if (query.TryGetValue("quartierId", out var id))
             Quartier = _quartiers.FirstOrDefault(q => q.Id == Convert.ToInt32(id));
-        HorsLigne = Connectivity.Current.NetworkAccess != NetworkAccess.Internet;
-        _ = LocaliserAsync();
+        await LocaliserAsync();
     }
 
     partial void OnCommentaireChanged(string value) => OnPropertyChanged(nameof(Compteur));
+    partial void OnEnvoiEnCoursChanged(bool value) => OnPropertyChanged(nameof(Pret));
 
     partial void OnQuartierChanged(Quartier? value)
     {
@@ -70,20 +79,16 @@ public partial class SignalerViewModel : ObservableObject, IQueryAttributable
     private void DecrireGps()
     {
         if (_position is null)
-        {
             (EtatGps, DetailGps, CouleurGps, IconeGps) = ("Position indisponible",
                 "Le signalement sera marqué « non géolocalisé ».", Palette.Gris, "Info");
-        }
+        else if (Verifie && _quartierGps is not null)
+            (EtatGps, DetailGps, CouleurGps, IconeGps) = ("Détecté par GPS", "", Palette.Vert, "Check");
         else if (Verifie)
-        {
             (EtatGps, DetailGps, CouleurGps, IconeGps) = ("Position GPS confirmée",
                 "Vous vous trouvez dans ce quartier.", Palette.Vert, "Check");
-        }
         else
-        {
             (EtatGps, DetailGps, CouleurGps, IconeGps) = ("Position hors de ce quartier",
                 "Le signalement comptera après vérification par un modérateur.", Palette.Orange, "Alerte");
-        }
     }
 
     [RelayCommand]
@@ -111,43 +116,36 @@ public partial class SignalerViewModel : ObservableObject, IQueryAttributable
         EnvoiEnCours = true;
         try
         {
-            int utilisateurId = _session.Utilisateur!.Id;
-            if (Connectivity.Current.NetworkAccess != NetworkAccess.Internet)
-            {
-                // EF2.5 : sans réseau, le signalement est gardé avec son heure réelle puis envoyé plus tard.
-                _coupures.MettreEnAttente(new SignalementEnAttente
-                {
-                    UtilisateurId = utilisateurId, QuartierId = Quartier.Id, Type = TypeSignalement.Coupure,
-                    Etendue = Etendue, Commentaire = Commentaire, Latitude = _position?.Lat, Longitude = _position?.Lng,
-                    Geolocalise = _position is not null, Verifie = Verifie
-                });
-                await Nav.Alerte("Signalement enregistré",
-                    "Vous êtes hors ligne. Votre signalement sera envoyé automatiquement dès le retour du réseau.");
-                await Nav.Retour();
-                return;
-            }
-
-            var resultat = _coupures.Signaler(utilisateurId, Quartier.Id, TypeSignalement.Coupure, Etendue, Commentaire,
-                _position?.Lat, _position?.Lng, _position is not null, Verifie);
-            if (resultat.Ok)
-            {
-                await Nav.Alerte("Merci !", resultat.Coupure!.Statut == StatutCoupure.Confirmee
+            // Sans réseau, LumionApi garde le signalement avec son heure réelle et l'enverra plus tard (EF2.5).
+            var resultat = await _api.Signaler(new NouveauSignalement(Quartier.Id, TypeSignalement.Coupure, Etendue,
+                Commentaire, _position?.Lat, _position?.Lng, _position is not null, Verifie));
+            if (resultat.EnAttente)
+                await Nav.Alerte("Signalement enregistré", resultat.Message);
+            else
+                await Nav.Alerte("Merci !", resultat.Coupure?.Statut == StatutCoupure.Confirmee
                     ? $"Votre signalement est enregistré. La coupure à {Quartier.Nom} est maintenant confirmée."
                     : "Merci, votre signalement est enregistré.");
+            await _synchronisation.Maintenant();
+            await Nav.Retour();
+        }
+        catch (ApiException e) when (e.Code == Core.Models.CodeErreur.SignalementDejaActif)
+        {
+            // UC06 E1 : un signalement est déjà actif, on propose plutôt le retour du courant.
+            if (!await Nav.Confirmer("Signalement déjà actif", e.Message, "Le courant est revenu")) return;
+            try
+            {
+                var retour = await _api.Signaler(new NouveauSignalement(Quartier.Id, TypeSignalement.Retour));
+                await Nav.Alerte("Merci !", retour.Message);
                 await Nav.Retour();
             }
-            else if (resultat.Code == CodeErreur.SignalementDejaActif &&
-                     await Nav.Confirmer("Signalement déjà actif", resultat.Message, "Le courant est revenu"))
+            catch (ApiException refus)
             {
-                // UC06 E1 : on propose plutôt de signaler le retour du courant.
-                var retour = _coupures.Signaler(utilisateurId, Quartier.Id, TypeSignalement.Retour);
-                await Nav.Alerte(retour.Ok ? "Merci !" : "Signalement impossible", retour.Message);
-                await Nav.Retour();
+                await Nav.Alerte("Signalement impossible", refus.Message);
             }
-            else if (resultat.Code != CodeErreur.SignalementDejaActif)
-            {
-                await Nav.Alerte("Signalement impossible", resultat.Message);
-            }
+        }
+        catch (ApiException e)
+        {
+            await Nav.Alerte("Signalement impossible", e.Message);
         }
         finally
         {

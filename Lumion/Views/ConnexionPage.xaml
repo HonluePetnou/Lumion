@@ -2,50 +2,93 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:c="clr-namespace:Lumion.Controls"
-             x:Class="Lumion.Views.ConnexionPage"
-             BackgroundColor="{StaticResource Blanc}"
-             Shell.TabBarIsVisible="False">
+             x:Class="Lumion.Views.ConnexionPage">
     <ScrollView>
-        <VerticalStackLayout Padding="24,16,24,24" Spacing="16">
-            <c:Logo HorizontalOptions="Start" />
+        <VerticalStackLayout>
+            <!-- En-tête bleu nuit : logo, promesse et atouts -->
+            <Border BackgroundColor="{StaticResource Vedette}" StrokeThickness="0" StrokeShape="RoundRectangle 0,0,32,32"
+                    Padding="24,48,24,30">
+                <Grid>
+                    <!-- Lueur ambre, comme une ampoule qui éclaire l'en-tête -->
+                    <Ellipse WidthRequest="340" HeightRequest="340" HorizontalOptions="End" VerticalOptions="Start"
+                             Margin="0,-150,-150,0">
+                        <Ellipse.Fill>
+                            <RadialGradientBrush Center="0.5,0.5" Radius="0.5">
+                                <GradientStop Color="#59F5A623" Offset="0" />
+                                <GradientStop Color="#00F5A623" Offset="1" />
+                            </RadialGradientBrush>
+                        </Ellipse.Fill>
+                    </Ellipse>
+                    <VerticalStackLayout Spacing="14">
+                        <Border HorizontalOptions="Start" WidthRequest="44" HeightRequest="44" StrokeThickness="0"
+                                StrokeShape="RoundRectangle 12" BackgroundColor="{StaticResource VedetteVoile}"
+                                SemanticProperties.Description="Retour">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="Retour" />
+                            </Border.GestureRecognizers>
+                            <c:Icone Nom="ChevronGauche" Taille="20" Couleur="{StaticResource VedetteTexte}" />
+                        </Border>
+                        <c:Logo Taille="42" SurNuit="True" HorizontalOptions="Start" Margin="0,8,0,0" />
+                        <Label Text="Sachez quand le courant coupe, et quand il revient, dans votre quartier."
+                               Style="{StaticResource TexteSecondaire}" FontSize="15" TextColor="{StaticResource VedetteTexte2}" />
+                        <FlexLayout Wrap="Wrap">
+                            <Border Style="{StaticResource Pastille}" BackgroundColor="{StaticResource VedetteVoile}" Margin="0,0,8,8">
+                                <HorizontalStackLayout Spacing="6">
+                                    <c:Icone Nom="Carte" Taille="14" Couleur="{StaticResource Accent}" />
+                                    <Label Text="Carte en direct" Style="{StaticResource TexteBadge}" TextColor="{StaticResource VedetteTexte}" />
+                                </HorizontalStackLayout>
+                            </Border>
+                            <Border Style="{StaticResource Pastille}" BackgroundColor="{StaticResource VedetteVoile}" Margin="0,0,8,8">
+                                <HorizontalStackLayout Spacing="6">
+                                    <c:Icone Nom="Cloche" Taille="14" Couleur="{StaticResource Accent}" />
+                                    <Label Text="Alertes" Style="{StaticResource TexteBadge}" TextColor="{StaticResource VedetteTexte}" />
+                                </HorizontalStackLayout>
+                            </Border>
+                            <Border Style="{StaticResource Pastille}" BackgroundColor="{StaticResource VedetteVoile}" Margin="0,0,8,8">
+                                <HorizontalStackLayout Spacing="6">
+                                    <c:Icone Nom="Stats" Taille="14" Couleur="{StaticResource Accent}" />
+                                    <Label Text="Statistiques" Style="{StaticResource TexteBadge}" TextColor="{StaticResource VedetteTexte}" />
+                                </HorizontalStackLayout>
+                            </Border>
+                        </FlexLayout>
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
 
-            <VerticalStackLayout Spacing="6" Margin="0,12,0,0">
-                <Label Text="Connexion" Style="{StaticResource TitrePage}" />
-                <Label Style="{StaticResource SousTitrePage}" FontSize="15"
-                       Text="Accédez à Lumion pour signaler des coupures dans votre quartier et suivre leur résolution." />
+            <!-- Formulaire -->
+            <VerticalStackLayout Padding="24,28,24,24" Spacing="16">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Connexion" Style="{StaticResource TitrePage}" />
+                    <Label Text="Entrez votre numéro, on vous envoie un code. Pas de mot de passe à retenir."
+                           Style="{StaticResource TexteSecondaire}" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Numéro de téléphone" Style="{StaticResource TexteLegende}" FontFamily="JakartaSemiBold" />
+                    <Border x:Name="ChampNumero" Style="{StaticResource Champ}">
+                        <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="12">
+                            <Label Text="+237" FontFamily="JakartaBold" FontSize="16" VerticalOptions="Center" />
+                            <BoxView Grid.Column="1" WidthRequest="1" HeightRequest="22" Color="{StaticResource Bordure}" />
+                            <Entry Grid.Column="2" x:Name="Numero" Keyboard="Telephone" Placeholder="6 71 23 45 67"
+                                   MaxLength="13" ReturnType="Done" TextChanged="NumeroModifie" Completed="Continuer"
+                                   SemanticProperties.Description="Numéro de téléphone" />
+                        </Grid>
+                    </Border>
+                    <Label x:Name="Erreur" Style="{StaticResource Erreur}" IsVisible="False" />
+                </VerticalStackLayout>
+
+                <Button x:Name="Valider" Text="Recevoir le code" Clicked="Continuer" IsEnabled="False" />
+
+                <HorizontalStackLayout HorizontalOptions="Center" Spacing="4">
+                    <Label Text="Nouveau sur Lumion ?" Style="{StaticResource TexteSecondaire}" VerticalOptions="Center" />
+                    <Button Text="Créer un compte" Style="{StaticResource BoutonLien}" Padding="2,0" Clicked="Inscrire" />
+                </HorizontalStackLayout>
+
+                <BoxView Style="{StaticResource Separateur}" />
+                <Button Text="Continuer sans compte" Style="{StaticResource BoutonContour}" Clicked="SansCompte" />
+                <Label Text="Sans compte, la carte, l'historique et les statistiques restent consultables."
+                       Style="{StaticResource TexteLegende}" HorizontalTextAlignment="Center" />
             </VerticalStackLayout>
-
-            <c:Etapes Etape="1" Margin="0,8" />
-
-            <VerticalStackLayout Spacing="6">
-                <Label Text="Numéro de téléphone" Style="{StaticResource TitreElement}" />
-                <Border x:Name="ChampNumero" Style="{StaticResource Champ}">
-                    <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="10">
-                        <c:Icone Nom="Telephone" Taille="20" Couleur="{StaticResource Gris}" />
-                        <Label Grid.Column="1" Text="+237" FontFamily="OpenSansSemibold" FontSize="16"
-                               TextColor="{StaticResource Encre}" VerticalOptions="Center" />
-                        <Entry Grid.Column="2" x:Name="Numero" Keyboard="Telephone" Placeholder="6 71 23 45 67"
-                               MaxLength="13" ReturnType="Done" TextChanged="NumeroModifie" Completed="Continuer"
-                               SemanticProperties.Description="Numéro de téléphone" />
-                    </Grid>
-                </Border>
-                <Label x:Name="Erreur" Style="{StaticResource Erreur}" IsVisible="False" />
-                <Label Style="{StaticResource Discret}"
-                       Text="Pas de mot de passe à retenir : un code à 6 chiffres vous est envoyé par SMS." />
-            </VerticalStackLayout>
-
-            <Button x:Name="Valider" Text="Recevoir le code" Clicked="Continuer" IsEnabled="False" />
-
-            <Grid ColumnDefinitions="*,Auto,*" ColumnSpacing="12" Margin="0,4">
-                <BoxView HeightRequest="1" Color="{StaticResource Bordure}" VerticalOptions="Center" />
-                <Label Grid.Column="1" Text="ou" Style="{StaticResource Discret}" />
-                <BoxView Grid.Column="2" HeightRequest="1" Color="{StaticResource Bordure}" VerticalOptions="Center" />
-            </Grid>
-
-            <Button Text="Créer un compte" Style="{StaticResource BoutonSecondaire}" Clicked="Inscrire" />
-            <Button Text="Continuer sans compte" Style="{StaticResource BoutonLien}" Clicked="SansCompte" />
-            <Label Style="{StaticResource Discret}" HorizontalTextAlignment="Center"
-                   Text="Sans compte, la carte, l'historique et les statistiques restent consultables." />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

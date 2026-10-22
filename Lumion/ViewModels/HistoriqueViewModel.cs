@@ -5,25 +5,48 @@ using Lumion.Core;
 using Lumion.Core.Models;
 using Lumion.Core.Services;
 using Lumion.Services;
+using DetailApi = Lumion.Core.Api.DetailCoupure;
 
 namespace Lumion.ViewModels;
 
-public record LigneCoupure(int Id, string Date, string Horaires, string Duree, string Signalements, string Type,
-    Color Couleur, Color Clair, string Icone)
+/// <summary>Une coupure dans une liste : pavé de date, durée, horaires et pastille éventuelle.</summary>
+public record LigneCoupure(int Id, string Jour, string Mois, string Duree, string Horaires, string Badge,
+    Color Couleur, Color Clair, DateTime Debut)
 {
+    public bool ABadge => Badge.Length > 0;
+
     public static LigneCoupure Depuis(Coupure c, DateTime maintenant)
     {
         var debut = Heure.Locale(c.Debut);
         bool delestage = c.Type == TypeCoupure.Delestage;
-        var (couleur, clair) = c.Ouverte ? (Palette.Rouge, Palette.RougeClair)
-            : delestage ? (Palette.Bleu, Palette.BleuClair) : (Palette.Orange, Palette.OrangeClair);
+        var (badge, couleur, clair) = c.Ouverte ? ("En cours", Palette.Rouge, Palette.RougeClair)
+            : delestage ? ("Délestage", Palette.Bleu, Palette.BleuClair)
+            : c.Breve ? ("Brève", Palette.Gris, Palette.FondGris)
+            : ("", Palette.Gris, Palette.FondGris);
         string duree = c.Ouverte
-            ? $"En cours · {Heure.Chrono(maintenant - c.Debut)}"
-            : Heure.Duree(c.DureeMinutes ?? 0) + (c.DureeEstimee ? " (estimée)" : "") + (c.Breve ? " · brève" : "");
-        string horaires = c.Fin is { } fin ? $"{debut:HH:mm} → {Heure.Locale(fin):HH:mm}" : $"Depuis {debut:HH:mm}";
-        return new LigneCoupure(c.Id, debut.ToString("dddd d MMMM yyyy", Heure.Culture), horaires, duree,
-            $"{c.NbConfirmations} signalement{(c.NbConfirmations > 1 ? "s" : "")}",
-            delestage ? "Délestage annoncé" : "Coupure signalée", couleur, clair, delestage ? "Horloge" : "Eclair");
+            ? Heure.Chrono(maintenant - c.Debut)
+            : Heure.Duree(c.DureeMinutes ?? 0) + (c.DureeEstimee ? " (estimée)" : "");
+        string fin = c.Fin is { } f ? Heure.Locale(f).ToString("HH:mm") : "en cours";
+        string horaires = $"{debut:HH:mm} → {fin} · {c.NbConfirmations} signalement{(c.NbConfirmations > 1 ? "s" : "")}";
+        return new LigneCoupure(c.Id, debut.Day.ToString(), debut.ToString("MMM", Heure.Culture).TrimEnd('.').ToUpperInvariant(),
+            duree, horaires, badge, couleur, clair, debut);
+    }
+}
+
+/// <summary>Coupures regroupées par semaine ou par mois.</summary>
+public class GroupeCoupures(string titre, IEnumerable<LigneCoupure> lignes) : List<LigneCoupure>(lignes)
+{
+    public string Titre { get; } = titre;
+
+    /// <summary>« Cette semaine », « Semaine dernière », puis un groupe par mois.</summary>
+    public static List<GroupeCoupures> Regrouper(IEnumerable<LigneCoupure> lignes)
+    {
+        var aujourdhui = Heure.Locale(DateTime.UtcNow).Date;
+        var lundi = aujourdhui.AddDays(-(((int)aujourdhui.DayOfWeek + 6) % 7));
+        string Titre(DateTime d) => d >= lundi ? "Cette semaine"
+            : d >= lundi.AddDays(-7) ? "Semaine dernière"
+            : HistoriqueViewModel.Majuscule(d.ToString("MMMM yyyy", Heure.Culture));
+        return lignes.GroupBy(l => Titre(l.Debut)).Select(g => new GroupeCoupures(g.Key, g)).ToList();
     }
 }
 
@@ -31,8 +54,7 @@ public record LigneCoupure(int Id, string Date, string Horaires, string Duree, s
 public partial class HistoriqueViewModel : ObservableObject, IQueryAttributable
 {
     private const int TaillePage = 20;
-    private readonly CoupureService _coupures;
-    private readonly IHorloge _horloge;
+    private readonly ILumionApi _api;
     private int _quartierId;
     private int _page;
     private bool _fin;
@@ -48,11 +70,10 @@ public partial class HistoriqueViewModel : ObservableObject, IQueryAttributable
     public List<string> Mois { get; } = [];
     private readonly List<DateTime> _mois = [];
 
-    public HistoriqueViewModel(CoupureService coupures, IHorloge horloge)
+    public HistoriqueViewModel(ILumionApi api)
     {
-        _coupures = coupures;
-        _horloge = horloge;
-        var courant = Heure.Locale(horloge.UtcNow);
+        _api = api;
+        var courant = Heure.Locale(DateTime.UtcNow);
         for (int i = 0; i < 12; i++)
         {
             var m = new DateTime(courant.Year, courant.Month, 1).AddMonths(-i);
@@ -64,53 +85,67 @@ public partial class HistoriqueViewModel : ObservableObject, IQueryAttributable
 
     public static string Majuscule(string texte) => char.ToUpper(texte[0], Heure.Culture) + texte[1..];
 
-    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    public async void ApplyQueryAttributes(IDictionary<string, object> query)
     {
         if (!query.TryGetValue("quartierId", out var id)) return;
         _quartierId = Convert.ToInt32(id);
-        NomQuartier = _coupures.QuartierParId(_quartierId)?.Nom ?? "";
-        Recharger();
+        try
+        {
+            NomQuartier = (await _api.Fiche(_quartierId)).Etat.Quartier.Nom;
+        }
+        catch (Exception e) when (e is HttpRequestException or ApiException) { }
+        await Recharger();
     }
 
     partial void OnPeriodeChanged(string value)
     {
         MoisVisible = value == "mois";
-        Recharger();
+        _ = Recharger();
     }
 
-    partial void OnMoisChoisiChanged(string? value) => Recharger();
+    partial void OnMoisChoisiChanged(string? value) => _ = Recharger();
 
     private (DateTime? Depuis, DateTime? Jusqua) Bornes()
     {
-        var maintenant = _horloge.UtcNow;
+        var maintenant = DateTime.UtcNow;
         if (Periode != "mois") return (maintenant.AddDays(-int.Parse(Periode)), null);
         var mois = _mois[Math.Max(0, Mois.IndexOf(MoisChoisi ?? Mois[0]))];
         return (Heure.DebutMoisUtc(mois.Year, mois.Month), Heure.FinMoisUtc(mois.Year, mois.Month));
     }
 
-    private void Recharger()
+    private async Task Recharger()
     {
         if (_quartierId == 0) return;
         _page = 0;
         _fin = false;
         Coupures.Clear();
-        ChargerSuite();
+        await ChargerSuite();
         Resume = Coupures.Count == 0 ? "" : Periode == "mois" ? MoisChoisi ?? "" : $"{Periode} derniers jours";
     }
 
     /// <summary>Chargement paginé par 20 éléments au défilement (UC10 A1).</summary>
     [RelayCommand]
-    private void ChargerSuite()
+    private async Task ChargerSuite()
     {
         if (_fin || _chargement || _quartierId == 0) return;
         _chargement = true;
-        var (depuis, jusqua) = Bornes();
-        var page = _coupures.Historique(_quartierId, depuis, jusqua, _page, TaillePage);
-        var maintenant = _horloge.UtcNow;
-        foreach (var c in page) Coupures.Add(LigneCoupure.Depuis(c, maintenant));
-        _fin = page.Count < TaillePage;
-        _page++;
-        _chargement = false;
+        try
+        {
+            var (depuis, jusqua) = Bornes();
+            var page = await _api.Historique(_quartierId, depuis, jusqua, _page);
+            var maintenant = DateTime.UtcNow;
+            foreach (var c in page) Coupures.Add(LigneCoupure.Depuis(c, maintenant));
+            _fin = page.Count < TaillePage;
+            _page++;
+        }
+        catch (Exception e) when (e is HttpRequestException or ApiException)
+        {
+            _fin = true;
+        }
+        finally
+        {
+            _chargement = false;
+        }
     }
 
     [RelayCommand]
@@ -125,9 +160,7 @@ public record LigneChronologie(string Heure, string Titre, string Detail, string
 /// <summary>Détail d'une coupure : début, fin, durée et chronologie anonymisée (UC09, UC10, RG14).</summary>
 public partial class CoupureDetailViewModel : ObservableObject, IQueryAttributable
 {
-    private readonly CoupureService _coupures;
-    private readonly Session _session;
-    private readonly IHorloge _horloge;
+    private readonly ILumionApi _api;
     private int _coupureId;
 
     [ObservableProperty] private string _quartier = "";
@@ -141,29 +174,39 @@ public partial class CoupureDetailViewModel : ObservableObject, IQueryAttributab
     [ObservableProperty] private string _mentionDuree = "";
     [ObservableProperty] private string _signalements = "";
     [ObservableProperty] private string _mentionAnonymat = "";
+    [ObservableProperty] private string _nbSignalements = "";
+    [ObservableProperty] private string _heureDebut = "";
+    [ObservableProperty] private string _heureFin = "";
+    // Frise de la journée : avant, pendant et après la coupure, en proportions.
+    [ObservableProperty] private GridLength _avant = new(0, GridUnitType.Star);
+    [ObservableProperty] private GridLength _pendant = new(1, GridUnitType.Star);
+    [ObservableProperty] private GridLength _apres = new(0, GridUnitType.Star);
 
     public ObservableCollection<LigneChronologie> Chronologie { get; } = [];
 
-    public CoupureDetailViewModel(CoupureService coupures, Session session, IHorloge horloge)
-    {
-        _coupures = coupures;
-        _session = session;
-        _horloge = horloge;
-    }
+    public CoupureDetailViewModel(ILumionApi api) => _api = api;
 
-    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    public async void ApplyQueryAttributes(IDictionary<string, object> query)
     {
         if (!query.TryGetValue("coupureId", out var id)) return;
         _coupureId = Convert.ToInt32(id);
-        Charger();
+        await Charger();
     }
 
-    public void Charger()
+    public async Task Charger()
     {
-        var c = _coupures.CoupureParId(_coupureId);
-        if (c is null) return;
-        var maintenant = _horloge.UtcNow;
-        Quartier = _coupures.QuartierParId(c.QuartierId)?.Nom ?? "";
+        DetailApi detail;
+        try
+        {
+            detail = await _api.Coupure(_coupureId);
+        }
+        catch (Exception e) when (e is HttpRequestException or ApiException)
+        {
+            return;
+        }
+        var c = detail.Coupure;
+        var maintenant = DateTime.UtcNow;
+        Quartier = detail.Quartier;
 
         (Statut, Couleur, Clair, Icone) = c.Statut switch
         {
@@ -188,29 +231,35 @@ public partial class CoupureDetailViewModel : ObservableObject, IQueryAttributab
             _ => "Du premier signalement au retour du courant"
         };
         Signalements = $"{c.NbConfirmations} signalement{(c.NbConfirmations > 1 ? "s" : "")}";
+        NbSignalements = c.NbConfirmations.ToString();
+        var debutLocal = Heure.Locale(c.Debut);
+        var finLocal = Heure.Locale(c.Fin ?? maintenant);
+        HeureDebut = debutLocal.ToString("HH:mm");
+        HeureFin = c.Fin is null ? "en cours" : finLocal.ToString("HH:mm");
+        double jour = 24 * 60, depuis = debutLocal.TimeOfDay.TotalMinutes;
+        double jusqua = finLocal.Date > debutLocal.Date ? jour : Math.Max(depuis + 1, finLocal.TimeOfDay.TotalMinutes);
+        Avant = new GridLength(depuis, GridUnitType.Star);
+        Pendant = new GridLength(Math.Max(jusqua - depuis, jour * 0.02), GridUnitType.Star);
+        Apres = new GridLength(Math.Max(jour - jusqua, 0.001), GridUnitType.Star);
 
-        // Les auteurs ne sont visibles que des modérateurs et administrateurs.
-        var auteurs = _session.Utilisateur is { } u && _session.EstModerateur
-            ? _coupures.SignalementsAvecAuteurs(c.Id, u).ToDictionary(x => x.Signalement.Id, x => x.Auteur)
-            : [];
-        MentionAnonymat = auteurs.Count > 0
+        // Le serveur ne renvoie les auteurs qu'aux modérateurs et administrateurs (RG14).
+        MentionAnonymat = detail.Chronologie.Any(l => l.Auteur is not null)
             ? "Vue modérateur : les auteurs sont affichés."
             : "Les signalements sont publics mais anonymes.";
 
         Chronologie.Clear();
-        foreach (var s in _coupures.Chronologie(c.Id))
+        foreach (var ligne in detail.Chronologie)
         {
+            var s = ligne.Signalement;
             var (titre, couleur, icone) = s.Type switch
             {
                 TypeSignalement.Coupure => ("Coupure signalée", Palette.Orange, "Eclair"),
                 TypeSignalement.Confirmation => ("Confirmation", Palette.Rouge, "Check"),
                 _ => ("Retour du courant signalé", Palette.Vert, "Retour")
             };
-            string auteur = auteurs.GetValueOrDefault(s.Id) is { } a
-                ? $"{a.NomAffichage} · fiabilité {a.ScoreFiabilite} %"
-                : "Un habitant";
-            string detail = auteur + (s.Geolocalise ? "" : " · non géolocalisé") + (s.Verifie ? "" : " · à vérifier");
-            Chronologie.Add(new LigneChronologie(Heure.Locale(s.CreeLe).ToString("HH:mm"), titre, detail, s.Commentaire, couleur, icone));
+            string auteur = ligne.Auteur is { } a ? $"{a} · fiabilité {ligne.FiabiliteAuteur} %" : "Un habitant";
+            string precision = auteur + (s.Geolocalise ? "" : " · non géolocalisé") + (s.Verifie ? "" : " · à vérifier");
+            Chronologie.Add(new LigneChronologie(Heure.Locale(s.CreeLe).ToString("HH:mm"), titre, precision, s.Commentaire, couleur, icone));
         }
     }
 }

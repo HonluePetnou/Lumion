@@ -5,103 +5,115 @@
              xmlns:vm="clr-namespace:Lumion.ViewModels"
              x:Class="Lumion.Views.ModerationPage"
              x:DataType="vm:ModerationViewModel">
-    <Grid RowDefinitions="Auto,Auto,*,Auto">
-        <Grid ColumnDefinitions="48,*" Padding="12,8,16,8" BackgroundColor="{StaticResource Blanc}">
-            <Grid BackgroundColor="Transparent" HeightRequest="48" SemanticProperties.Description="Retour">
-                <Grid.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="Retour" />
-                </Grid.GestureRecognizers>
-                <c:Icone Nom="ChevronGauche" />
-            </Grid>
-            <VerticalStackLayout Grid.Column="1">
-                <Label Text="Modération" Style="{StaticResource TitrePage}" FontSize="24" />
-                <Label Text="Vérifiez et validez les signalements de coupures" Style="{StaticResource SousTitrePage}" />
-            </VerticalStackLayout>
-        </Grid>
+    <Grid RowDefinitions="Auto,Auto,*">
+        <c:EnTete Titre="Modération" Retour="True" />
 
-        <VerticalStackLayout Grid.Row="1" Padding="16,8" Spacing="10" BackgroundColor="{StaticResource Blanc}">
-            <c:Choix Options="{Binding Onglets}" Valeurs="traiter|suspects" Change="OngletChange" Etire="True" />
-            <Button Text="{Binding LibelleTri}" Style="{StaticResource BoutonSecondaire}" HorizontalOptions="Start"
-                    Command="{Binding InverserTriCommand}" />
+        <VerticalStackLayout Grid.Row="1" Padding="20,4,20,6" Spacing="8">
+            <c:Choix Segment="True" Options="{Binding Onglets}" Valeurs="traiter|suspects" Selection="{Binding Onglet}" />
+            <Grid HorizontalOptions="Start" BackgroundColor="Transparent" Padding="0,6">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding InverserTriCommand}" />
+                </Grid.GestureRecognizers>
+                <HorizontalStackLayout Spacing="6">
+                    <c:Icone Nom="Filtre" Taille="14" Couleur="{StaticResource Texte2}" />
+                    <Label Text="{Binding LibelleTri}" Style="{StaticResource TexteLegende}" FontFamily="JakartaSemiBold" />
+                    <c:Icone Nom="ChevronBas" Taille="12" Couleur="{StaticResource Texte2}" />
+                </HorizontalStackLayout>
+            </Grid>
         </VerticalStackLayout>
 
         <CollectionView Grid.Row="2" ItemsSource="{Binding Cartes}">
             <CollectionView.EmptyView>
-                <VerticalStackLayout Padding="32,64,32,0" Spacing="8">
-                    <c:Icone Nom="Check" Taille="44" Couleur="{StaticResource Vert}" />
-                    <Label Text="Aucune coupure à traiter" Style="{StaticResource TitreElement}" HorizontalTextAlignment="Center" />
-                    <Label Text="La file de modération est vide pour cette catégorie." Style="{StaticResource Discret}"
+                <VerticalStackLayout Padding="32,56,32,0" Spacing="8">
+                    <c:Icone Nom="Check" Taille="40" Couleur="{StaticResource Normal}" />
+                    <Label Text="Rien à traiter" Style="{StaticResource TexteElement}" HorizontalTextAlignment="Center" />
+                    <Label Text="La file de modération est vide pour cette catégorie." Style="{StaticResource TexteSecondaire}"
                            HorizontalTextAlignment="Center" />
                 </VerticalStackLayout>
             </CollectionView.EmptyView>
+            <CollectionView.Footer>
+                <BoxView HeightRequest="16" Color="Transparent" />
+            </CollectionView.Footer>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="vm:CarteModeration">
-                    <Grid Padding="16,6">
-                        <Border Style="{StaticResource Carte}" Padding="14,12">
+                    <Grid Padding="20,5">
+                        <Border Style="{StaticResource Carte}">
                             <VerticalStackLayout Spacing="12">
-                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12" BackgroundColor="Transparent">
+                                <!-- En-tête : quartier, ancienneté, statut -->
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" BackgroundColor="Transparent">
                                     <Grid.GestureRecognizers>
                                         <TapGestureRecognizer
                                             Command="{Binding DeplierCommand, Source={RelativeSource AncestorType={x:Type vm:ModerationViewModel}}, x:DataType=vm:ModerationViewModel}"
                                             CommandParameter="{Binding .}" />
                                     </Grid.GestureRecognizers>
-                                    <Border Style="{StaticResource Rond}" WidthRequest="48" HeightRequest="48"
-                                            BackgroundColor="{Binding Couleur}" VerticalOptions="Start">
-                                        <c:Icone Nom="Eclair" Couleur="{StaticResource Blanc}" />
-                                    </Border>
-                                    <VerticalStackLayout Grid.Column="1" Spacing="2">
-                                        <Label Text="{Binding Quartier}" Style="{StaticResource TitreElement}" FontSize="16" />
-                                        <Label Text="{Binding Date}" Style="{StaticResource Discret}" />
-                                        <HorizontalStackLayout Spacing="6">
-                                            <c:Icone Nom="Personnes" Taille="14" Couleur="{StaticResource Gris}" />
-                                            <Label Text="{Binding Signalements}" FontSize="13" />
-                                        </HorizontalStackLayout>
-                                        <Border Style="{StaticResource Pastille}" BackgroundColor="{Binding ClairFiabilite}"
-                                                HorizontalOptions="Start" Padding="8,3">
-                                            <Label Text="{Binding Fiabilite}" TextColor="{Binding CouleurFiabilite}" FontSize="12"
-                                                   FontFamily="OpenSansSemibold" />
-                                        </Border>
+                                    <VerticalStackLayout Spacing="3">
+                                        <Label Text="{Binding Quartier}" Style="{StaticResource TitreSection}" FontFamily="JakartaExtraBold" />
+                                        <Label Style="{StaticResource TexteLegende}">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="{Binding Date}" />
+                                                    <Span Text=" · " />
+                                                    <Span Text="{Binding Signalements}" />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
                                     </VerticalStackLayout>
-                                    <c:Icone Grid.Column="2" Nom="{Binding Chevron}" Taille="20" VerticalOptions="Start" />
+                                    <Border Grid.Column="1" Style="{StaticResource Pastille}" BackgroundColor="{Binding Clair}"
+                                            VerticalOptions="Start">
+                                        <HorizontalStackLayout Spacing="6">
+                                            <Ellipse WidthRequest="7" HeightRequest="7" Fill="{Binding Couleur}" VerticalOptions="Center" />
+                                            <Label Text="{Binding StatutCourt}" Style="{StaticResource TexteBadge}" TextColor="{Binding Couleur}" />
+                                        </HorizontalStackLayout>
+                                    </Border>
                                 </Grid>
 
-                                <VerticalStackLayout Spacing="12" IsVisible="{Binding Ouverte}">
-                                    <BoxView HeightRequest="1" Color="{StaticResource Bordure}" />
-                                    <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="8"
-                                          RowSpacing="8">
-                                        <c:Icone Nom="Epingle" Taille="16" />
-                                        <Label Grid.Column="1" Text="Quartier" Style="{StaticResource Discret}" />
-                                        <Label Grid.Column="2" Text="{Binding Quartier}" Style="{StaticResource TitreElement}" FontSize="13" />
-                                        <c:Icone Grid.Row="1" Nom="Horloge" Taille="16" />
-                                        <Label Grid.Row="1" Grid.Column="1" Text="Premiers signalements" Style="{StaticResource Discret}" />
-                                        <Label Grid.Row="1" Grid.Column="2" Text="{Binding Premiers}" FontSize="13" />
-                                        <c:Icone Grid.Row="2" Nom="Info" Taille="16" />
-                                        <Label Grid.Row="2" Grid.Column="1" Text="État" Style="{StaticResource Discret}" />
-                                        <Label Grid.Row="2" Grid.Column="2" Text="{Binding Statut}" FontSize="13" />
-                                        <c:Icone Grid.Row="3" Nom="Bouclier" Taille="16" />
-                                        <Label Grid.Row="3" Grid.Column="1" Text="Fiabilité" Style="{StaticResource Discret}" />
-                                        <Label Grid.Row="3" Grid.Column="2" Text="{Binding FiabiliteDetail}"
-                                               TextColor="{Binding CouleurFiabilite}" FontFamily="OpenSansSemibold" FontSize="13" />
-                                    </Grid>
-                                    <Button Text="Voir les signalements et leurs auteurs" Style="{StaticResource BoutonLien}"
-                                            HorizontalOptions="Start"
-                                            Command="{Binding DetailCommand, Source={RelativeSource AncestorType={x:Type vm:ModerationViewModel}}, x:DataType=vm:ModerationViewModel}"
+                                <!-- Fiabilité des auteurs -->
+                                <Border StrokeThickness="0" StrokeShape="RoundRectangle 12" BackgroundColor="{Binding ClairFiabilite}"
+                                        Padding="10,8">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding DeplierCommand, Source={RelativeSource AncestorType={x:Type vm:ModerationViewModel}}, x:DataType=vm:ModerationViewModel}"
                                             CommandParameter="{Binding .}" />
-                                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
-                                        <Button Text="Valider" BackgroundColor="{StaticResource Vert}" TextColor="{StaticResource Blanc}"
-                                                IsEnabled="{Binding PeutValider}"
+                                    </Border.GestureRecognizers>
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                        <c:Icone Nom="Bouclier" Taille="14" Couleur="{Binding CouleurFiabilite}" />
+                                        <Label Grid.Column="1" Style="{StaticResource TexteLegende}" FontFamily="JakartaSemiBold"
+                                               TextColor="{StaticResource Texte}">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="{Binding Fiabilite}" />
+                                                    <Span Text=" · " />
+                                                    <Span Text="{Binding FiabiliteDetail}" />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+                                        <c:Icone Grid.Column="2" Nom="{Binding Chevron}" Taille="14" Couleur="{StaticResource Texte2}" />
+                                    </Grid>
+                                </Border>
+
+                                <!-- Actions (UC15) -->
+                                <VerticalStackLayout Spacing="8" IsVisible="{Binding Ouverte}">
+                                    <Label Text="{Binding Statut}" Style="{StaticResource TexteLegende}" />
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <Button Text="Valider" Style="{StaticResource BoutonSucces}" IsEnabled="{Binding PeutValider}"
                                                 Command="{Binding ValiderCommand, Source={RelativeSource AncestorType={x:Type vm:ModerationViewModel}}, x:DataType=vm:ModerationViewModel}"
                                                 CommandParameter="{Binding .}" />
                                         <Button Grid.Column="1" Text="Rejeter" Style="{StaticResource BoutonDanger}"
                                                 Command="{Binding RejeterCommand, Source={RelativeSource AncestorType={x:Type vm:ModerationViewModel}}, x:DataType=vm:ModerationViewModel}"
                                                 CommandParameter="{Binding .}" />
-                                        <Button Grid.Row="1" Text="Fusionner" Style="{StaticResource BoutonSecondaire}"
+                                    </Grid>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <Button Text="Fusionner" Style="{StaticResource BoutonContour}" MinimumHeightRequest="46"
                                                 Command="{Binding FusionnerCommand, Source={RelativeSource AncestorType={x:Type vm:ModerationViewModel}}, x:DataType=vm:ModerationViewModel}"
                                                 CommandParameter="{Binding .}" />
-                                        <Button Grid.Row="1" Grid.Column="1" Text="Clôturer" Style="{StaticResource BoutonSecondaire}"
+                                        <Button Grid.Column="1" Text="Clôturer" Style="{StaticResource BoutonContour}" MinimumHeightRequest="46"
                                                 Command="{Binding CloturerCommand, Source={RelativeSource AncestorType={x:Type vm:ModerationViewModel}}, x:DataType=vm:ModerationViewModel}"
                                                 CommandParameter="{Binding .}" />
                                     </Grid>
+                                    <Button Text="Voir les signalements et leurs auteurs" Style="{StaticResource BoutonLien}"
+                                            HorizontalOptions="Center"
+                                            Command="{Binding DetailCommand, Source={RelativeSource AncestorType={x:Type vm:ModerationViewModel}}, x:DataType=vm:ModerationViewModel}"
+                                            CommandParameter="{Binding .}" />
                                 </VerticalStackLayout>
                             </VerticalStackLayout>
                         </Border>
@@ -109,7 +121,5 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-
-        <c:BarreOnglets Grid.Row="3" Actif="profil" />
     </Grid>
 </ContentPage>

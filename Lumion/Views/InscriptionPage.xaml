@@ -2,64 +2,57 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:c="clr-namespace:Lumion.Controls"
-             x:Class="Lumion.Views.InscriptionPage"
-             BackgroundColor="{StaticResource Blanc}"
-             Shell.TabBarIsVisible="False">
-    <ScrollView>
-        <VerticalStackLayout Padding="24,16,24,24" Spacing="16">
-            <Grid ColumnDefinitions="Auto,*">
-                <Grid WidthRequest="48" HeightRequest="48" BackgroundColor="Transparent"
-                      SemanticProperties.Description="Retour">
-                    <c:Icone Nom="ChevronGauche" HorizontalOptions="Start" />
-                    <Grid.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="Retour" />
-                    </Grid.GestureRecognizers>
-                </Grid>
-                <c:Logo Grid.Column="1" HorizontalOptions="Start" />
-            </Grid>
+             x:Class="Lumion.Views.InscriptionPage">
+    <Grid RowDefinitions="Auto,*,Auto">
+        <c:EnTete Titre="Créer un compte" Retour="True" />
 
-            <VerticalStackLayout Spacing="6">
-                <Label Text="Inscription" Style="{StaticResource TitrePage}" />
-                <Label Style="{StaticResource SousTitrePage}" FontSize="15"
-                       Text="Créez votre compte en trois étapes pour signaler les coupures et être prévenu dans votre quartier." />
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="24,8,24,16" Spacing="20">
+                <c:Etapes Etape="1" />
+
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Faisons connaissance" Style="{StaticResource TitrePage}" />
+                    <Label Style="{StaticResource TexteSecondaire}"
+                           Text="Votre nom n'est visible que des modérateurs. Vos voisins voient seulement « un habitant »." />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Nom d'affichage" Style="{StaticResource TexteLegende}" FontFamily="JakartaSemiBold" />
+                    <Border x:Name="ChampNom" Style="{StaticResource Champ}">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                            <c:Icone Nom="Profil" Taille="18" Couleur="{StaticResource Texte3}" />
+                            <Entry Grid.Column="1" x:Name="Nom" Placeholder="Ex. : Frédéric Armel" MaxLength="40"
+                                   Keyboard="Text" ReturnType="Next" TextChanged="Valider"
+                                   SemanticProperties.Description="Nom d'affichage" />
+                            <Label Grid.Column="2" x:Name="Compteur" Text="0/30" Style="{StaticResource TexteLegende}"
+                                   VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+                    <Label x:Name="ErreurNom" Style="{StaticResource Erreur}" IsVisible="False" />
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Numéro de téléphone" Style="{StaticResource TexteLegende}" FontFamily="JakartaSemiBold" />
+                    <Border x:Name="ChampNumero" Style="{StaticResource Champ}">
+                        <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="12">
+                            <Label Text="+237" FontFamily="JakartaBold" FontSize="16" VerticalOptions="Center" />
+                            <BoxView Grid.Column="1" WidthRequest="1" HeightRequest="22" Color="{StaticResource Bordure}" />
+                            <Entry Grid.Column="2" x:Name="Numero" Keyboard="Telephone" Placeholder="6 71 23 45 67"
+                                   MaxLength="13" ReturnType="Done" TextChanged="Valider"
+                                   SemanticProperties.Description="Numéro de téléphone" />
+                        </Grid>
+                    </Border>
+                    <Label x:Name="ErreurNumero" Style="{StaticResource Erreur}" IsVisible="False" />
+                    <Label Text="Vous recevrez un code de vérification par SMS." Style="{StaticResource TexteLegende}" />
+                </VerticalStackLayout>
             </VerticalStackLayout>
+        </ScrollView>
 
-            <c:Etapes Etape="1" Margin="0,8" />
-
-            <VerticalStackLayout Spacing="6">
-                <Label Text="Nom d'affichage" Style="{StaticResource TitreElement}" />
-                <Border x:Name="ChampNom" Style="{StaticResource Champ}">
-                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
-                        <c:Icone Nom="Profil" Taille="20" Couleur="{StaticResource Gris}" />
-                        <Entry Grid.Column="1" x:Name="Nom" Placeholder="Ex. : Frédéric Armel" MaxLength="40"
-                               Keyboard="Text" ReturnType="Next" TextChanged="Valider"
-                               SemanticProperties.Description="Nom d'affichage" />
-                        <Label Grid.Column="2" x:Name="Compteur" Text="0/30" Style="{StaticResource Discret}"
-                               VerticalOptions="Center" />
-                    </Grid>
-                </Border>
-                <Label x:Name="ErreurNom" Style="{StaticResource Erreur}" IsVisible="False" />
-            </VerticalStackLayout>
-
-            <VerticalStackLayout Spacing="6">
-                <Label Text="Numéro de téléphone" Style="{StaticResource TitreElement}" />
-                <Border x:Name="ChampNumero" Style="{StaticResource Champ}">
-                    <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="10">
-                        <c:Icone Nom="Telephone" Taille="20" Couleur="{StaticResource Gris}" />
-                        <Label Grid.Column="1" Text="+237" FontFamily="OpenSansSemibold" FontSize="16"
-                               TextColor="{StaticResource Encre}" VerticalOptions="Center" />
-                        <Entry Grid.Column="2" x:Name="Numero" Keyboard="Telephone" Placeholder="6 71 23 45 67"
-                               MaxLength="13" ReturnType="Done" TextChanged="Valider"
-                               SemanticProperties.Description="Numéro de téléphone" />
-                    </Grid>
-                </Border>
-                <Label x:Name="ErreurNumero" Style="{StaticResource Erreur}" IsVisible="False" />
-            </VerticalStackLayout>
-
-            <Button x:Name="Suivant" Text="Recevoir le code" Clicked="Continuer" IsEnabled="False" />
+        <VerticalStackLayout Grid.Row="2" Padding="24,8,24,20" Spacing="8">
+            <Label Style="{StaticResource TexteLegende}" HorizontalTextAlignment="Center"
+                   Text="Vos signalements sont publics mais anonymes." />
+            <Button x:Name="Suivant" Text="Continuer" Clicked="Continuer" IsEnabled="False" />
             <Button Text="J'ai déjà un compte" Style="{StaticResource BoutonLien}" Clicked="Retour" />
-            <Label Style="{StaticResource Discret}" HorizontalTextAlignment="Center"
-                   Text="Vos signalements sont publics mais anonymes : votre nom et votre numéro ne sont visibles que des modérateurs." />
         </VerticalStackLayout>
-    </ScrollView>
+    </Grid>
 </ContentPage>

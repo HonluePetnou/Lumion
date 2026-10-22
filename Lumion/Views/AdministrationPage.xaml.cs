@@ -1,4 +1,3 @@
-using Lumion.Services;
 using Lumion.ViewModels;
 
 namespace Lumion.Views;
@@ -13,11 +12,9 @@ public partial class AdministrationPage : ContentPage
         BindingContext = _vm = vm;
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
-        _vm.Charger();
+        await _vm.Charger();
     }
-
-    private async void Retour(object? sender, TappedEventArgs e) => await Nav.Retour();
 }

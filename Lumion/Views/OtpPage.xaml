@@ -2,89 +2,66 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:c="clr-namespace:Lumion.Controls"
-             x:Class="Lumion.Views.OtpPage"
-             BackgroundColor="{StaticResource Blanc}"
-             Shell.TabBarIsVisible="False">
-    <ScrollView>
-        <VerticalStackLayout Padding="24,16,24,24" Spacing="16">
-            <c:Logo HorizontalOptions="Start" />
+             x:Class="Lumion.Views.OtpPage">
+    <Grid RowDefinitions="Auto,*,Auto">
+        <c:EnTete Titre="Vérification" Retour="True" />
 
-            <VerticalStackLayout Spacing="6">
-                <Label Text="Inscription / connexion" Style="{StaticResource TitrePage}" />
-                <Label Style="{StaticResource SousTitrePage}" FontSize="15"
-                       Text="Accédez à Lumion pour signaler des coupures dans votre quartier et suivre leur résolution." />
-            </VerticalStackLayout>
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="24,8,24,16" Spacing="20">
+                <c:Etapes x:Name="Progression" Etape="2" />
 
-            <c:Etapes Etape="2" Margin="0,8" />
-
-            <Border Style="{StaticResource Carte}">
-                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-                    <Border Style="{StaticResource Rond}" BackgroundColor="{StaticResource FondGris}">
-                        <c:Icone Nom="Telephone" Taille="20" />
-                    </Border>
-                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                        <Label Text="Numéro de téléphone" Style="{StaticResource Discret}" LineBreakMode="TailTruncation" />
-                        <Label x:Name="Numero" Style="{StaticResource TitreElement}" FontSize="15" LineBreakMode="NoWrap" />
-                    </VerticalStackLayout>
-                    <Button Grid.Column="2" Text="Modifier" Style="{StaticResource BoutonLien}" Clicked="Modifier"
-                            Padding="2,0" FontSize="13" />
-                </Grid>
-            </Border>
-
-            <VerticalStackLayout Spacing="4">
-                <Label Text="Entrez le code reçu" Style="{StaticResource TitreSection}" FontSize="22" />
-                <Label x:Name="Consigne" Style="{StaticResource SousTitrePage}" FontSize="15" />
-            </VerticalStackLayout>
-
-            <!-- Six cases reflétant un champ de saisie unique, plus simple à remplir au clavier. -->
-            <Grid>
-                <Entry x:Name="Code" Keyboard="Numeric" MaxLength="6" Opacity="0" TextChanged="CodeModifie"
-                       Completed="Verifier" SemanticProperties.Description="Code de vérification à 6 chiffres" />
-                <Grid x:Name="Cases" ColumnDefinitions="*,*,*,*,*,*" ColumnSpacing="8" HeightRequest="64"
-                      BackgroundColor="Transparent">
-                    <Grid.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="Saisir" />
-                    </Grid.GestureRecognizers>
-                </Grid>
-            </Grid>
-            <Label x:Name="Erreur" Style="{StaticResource Erreur}" IsVisible="False" />
-
-            <Border x:Name="Demo" Style="{StaticResource Carte}" BackgroundColor="{StaticResource BleuClair}"
-                    StrokeThickness="0" Padding="14,10">
-                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                    <c:Icone Nom="Info" Taille="20" Couleur="{StaticResource Bleu}" VerticalOptions="Start" />
-                    <Label Grid.Column="1" x:Name="TexteDemo" TextColor="{StaticResource Encre}" FontSize="13" />
-                </Grid>
-            </Border>
-
-            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                <Border Style="{StaticResource Rond}" BackgroundColor="{StaticResource FondGris}"
-                        WidthRequest="36" HeightRequest="36">
-                    <c:Icone Nom="Horloge" Taille="18" Couleur="{StaticResource Gris}" />
-                </Border>
-                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                    <Label Text="Vous n'avez pas reçu le code ?" FontSize="14" />
-                    <Label x:Name="Compte" Style="{StaticResource Discret}" />
-                    <Button x:Name="Renvoi" Text="Renvoyer le code" Style="{StaticResource BoutonLien}"
-                            Clicked="Renvoyer" IsEnabled="False" HorizontalOptions="Start" Padding="0,4" />
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Entrez le code" Style="{StaticResource TitrePage}" />
+                    <HorizontalStackLayout Spacing="2">
+                        <Label x:Name="Consigne" Style="{StaticResource TexteSecondaire}" VerticalOptions="Center" />
+                        <Button Text="Modifier" Style="{StaticResource BoutonLien}" Clicked="Modifier" Padding="4,0" FontSize="13" />
+                    </HorizontalStackLayout>
                 </VerticalStackLayout>
-            </Grid>
 
-            <Border x:Name="Suite" Style="{StaticResource Carte}">
-                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                    <Border Style="{StaticResource Rond}" BackgroundColor="{StaticResource FondGris}">
-                        <c:Icone Nom="Epingle" Taille="20" />
-                    </Border>
-                    <VerticalStackLayout Grid.Column="1">
-                        <Label Text="Étape 3" Style="{StaticResource Discret}" />
-                        <Label Text="Choisir votre quartier" Style="{StaticResource TitreElement}" />
-                        <Label Text="Sélectionnez votre quartier à Douala pour voir les informations locales."
-                               Style="{StaticResource Discret}" />
-                    </VerticalStackLayout>
+                <!-- Six cases reflétant un champ de saisie unique, plus simple à remplir au clavier. -->
+                <Grid>
+                    <Entry x:Name="Code" Keyboard="Numeric" MaxLength="6" Opacity="0" TextChanged="CodeModifie"
+                           Completed="Verifier" SemanticProperties.Description="Code de vérification à 6 chiffres" />
+                    <Grid x:Name="Cases" ColumnDefinitions="*,*,*,*,*,*" ColumnSpacing="8" HeightRequest="60"
+                          BackgroundColor="Transparent">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="Saisir" />
+                        </Grid.GestureRecognizers>
+                    </Grid>
                 </Grid>
-            </Border>
+                <Label x:Name="Erreur" Style="{StaticResource Erreur}" IsVisible="False" />
 
-            <Button x:Name="Valider" Text="Vérifier le code" Clicked="Verifier" IsEnabled="False" />
-        </VerticalStackLayout>
-    </ScrollView>
+                <Border x:Name="Demo" Style="{StaticResource Carte}" BackgroundColor="{StaticResource AccentDoux}"
+                        StrokeThickness="0" Padding="14,12" StrokeShape="RoundRectangle 14">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <c:Icone Nom="Info" Taille="18" Couleur="{StaticResource AccentTexte}" VerticalOptions="Start" />
+                        <Label Grid.Column="1" x:Name="TexteDemo" Style="{StaticResource TexteLegende}" FontFamily="JakartaSemiBold"
+                               TextColor="{StaticResource Texte}" />
+                    </Grid>
+                </Border>
+
+                <HorizontalStackLayout Spacing="8">
+                    <c:Icone Nom="Horloge" Taille="16" Couleur="{StaticResource Texte3}" />
+                    <Label x:Name="Compte" Style="{StaticResource TexteSecondaire}" TextColor="{StaticResource Texte3}"
+                           VerticalOptions="Center" />
+                    <Button x:Name="Renvoi" Text="Renvoyer le code" Style="{StaticResource BoutonLien}"
+                            Clicked="Renvoyer" IsEnabled="False" Padding="0,4" />
+                </HorizontalStackLayout>
+
+                <Border x:Name="Suite" Style="{StaticResource Carte}" Padding="14,12">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Border Style="{StaticResource Tuile}">
+                            <c:Icone Nom="Epingle" Taille="16" />
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label Text="Ensuite : votre quartier" Style="{StaticResource TexteElement}" />
+                            <Label Text="Pour recevoir les alertes de chez vous." Style="{StaticResource TexteLegende}" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Button Grid.Row="2" x:Name="Valider" Text="Vérifier" Clicked="Verifier" IsEnabled="False" Margin="24,8,24,20" />
+    </Grid>
 </ContentPage>

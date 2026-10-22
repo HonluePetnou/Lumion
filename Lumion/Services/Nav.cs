@@ -17,6 +17,16 @@ public static class Nav
     public static Task<bool> Confirmer(string titre, string message, string oui = "Confirmer") =>
         Shell.Current.DisplayAlert(titre, message, oui, "Annuler");
 
+    /// <summary>Message adapté à une erreur d'API : refus métier ou serveur injoignable.</summary>
+    public static string Message(Exception e) => e switch
+    {
+        ApiException api => api.Message,
+        HttpRequestException => "Le serveur Lumion est injoignable. Vérifiez votre connexion ou l'adresse du serveur dans le profil.",
+        _ => "Une erreur inattendue est survenue."
+    };
+
+    public static Task Erreur(Exception e, string titre = "Action impossible") => Alerte(titre, Message(e));
+
     /// <summary>Les actions d'écriture sont réservées aux inscrits (RG12, UC05 A1).</summary>
     public static async Task<bool> ExigerCompte(Session session)
     {

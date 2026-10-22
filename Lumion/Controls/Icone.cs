@@ -20,8 +20,9 @@ public class Icone : AbsoluteLayout
     public static readonly BindableProperty NomProperty = BindableProperty.Create(nameof(Nom), typeof(string),
         typeof(Icone), null, propertyChanged: (b, _, _) => ((Icone)b).Actualiser());
 
+    /// <summary>Sans couleur explicite, l'icône prend la couleur du texte du thème courant.</summary>
     public static readonly BindableProperty CouleurProperty = BindableProperty.Create(nameof(Couleur), typeof(Color),
-        typeof(Icone), Color.FromArgb("#0F1B3D"), propertyChanged: (b, _, _) => ((Icone)b).Actualiser());
+        typeof(Icone), null, propertyChanged: (b, _, _) => ((Icone)b).Actualiser());
 
     public static readonly BindableProperty TailleProperty = BindableProperty.Create(nameof(Taille), typeof(double),
         typeof(Icone), Grille, propertyChanged: (b, _, _) => ((Icone)b).Actualiser());
@@ -30,7 +31,7 @@ public class Icone : AbsoluteLayout
         typeof(Icone), false, propertyChanged: (b, _, _) => ((Icone)b).Actualiser());
 
     public string? Nom { get => (string?)GetValue(NomProperty); set => SetValue(NomProperty, value); }
-    public Color Couleur { get => (Color)GetValue(CouleurProperty); set => SetValue(CouleurProperty, value); }
+    public Color? Couleur { get => (Color?)GetValue(CouleurProperty); set => SetValue(CouleurProperty, value); }
     public double Taille { get => (double)GetValue(TailleProperty); set => SetValue(TailleProperty, value); }
     /// <summary>Remplit le tracé au lieu de le dessiner au trait.</summary>
     public bool Pleine { get => (bool)GetValue(PleineProperty); set => SetValue(PleineProperty, value); }
@@ -49,8 +50,9 @@ public class Icone : AbsoluteLayout
     {
         WidthRequest = HeightRequest = Taille;
         _trace.Scale = Taille / Grille;
-        _trace.Stroke = new SolidColorBrush(Couleur);
-        _trace.Fill = Pleine ? new SolidColorBrush(Couleur) : Brush.Transparent;
+        var couleur = Couleur ?? Services.Palette.Texte;
+        _trace.Stroke = new SolidColorBrush(couleur);
+        _trace.Fill = Pleine ? new SolidColorBrush(couleur) : Brush.Transparent;
         if (Nom is not null && Traces.TryGetValue(Nom, out var donnees))
             _trace.Data = (Geometry)Convertisseur.ConvertFromInvariantString(donnees)!;
     }
@@ -101,6 +103,8 @@ public class Icone : AbsoluteLayout
         ["Filtre"] = "M4 5 H20 L14 12.5 V19 L10 17 V12.5 Z",
         ["Sablier"] = "M6 3 H18 M6 21 H18 M7 3 c0 6 10 6 10 18 M17 3 c0 6 -10 6 -10 18",
         ["Telephone"] = "M5 4 H9 L10.5 8.5 L8.5 10 a11 11 0 0 0 5.5 5.5 L15.5 13.5 L20 15 V19 a1 1 0 0 1 -1 1 A15 15 0 0 1 4 5 a1 1 0 0 1 1 -1 Z",
+        ["Serveur"] = "M4 4 H20 V10 H4 Z M4 14 H20 V20 H4 Z M8 7 H8.1 M8 17 H8.1",
+        ["Partager"] = "M12 15 V3 M7.5 7.5 L12 3 L16.5 7.5 M5 12 V20 H19 V12",
         ["Reglages"] = "M4 7 H13 M17 7 H20 M4 17 H7 M11 17 H20 M15 9 a2 2 0 1 0 0 -4 a2 2 0 0 0 0 4 Z M9 19 a2 2 0 1 0 0 -4 a2 2 0 0 0 0 4 Z",
     };
 }

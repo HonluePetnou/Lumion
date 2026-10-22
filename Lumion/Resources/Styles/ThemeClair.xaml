@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xaml-comp compile="true" ?>
+<!-- Thème clair. Mêmes clés dans les deux thèmes (variables « Thème » de la maquette Figma). -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    x:Class="Lumion.Resources.Styles.ThemeClair">
+    <Color x:Key="Fond">#F7F8FA</Color>
+    <Color x:Key="Surface">#FFFFFF</Color>
+    <Color x:Key="Surface2">#EEF1F5</Color>
+    <Color x:Key="Bordure">#E4E7EC</Color>
+    <Color x:Key="Texte">#0E1A35</Color>
+    <Color x:Key="Texte2">#667085</Color>
+    <Color x:Key="Texte3">#98A2B3</Color>
+    <Color x:Key="Accent">#F5A623</Color>
+    <Color x:Key="AccentTexte">#D98A05</Color>
+    <Color x:Key="AccentDoux">#FFF4DC</Color>
+    <Color x:Key="SurAccent">#0E1A35</Color>
+    <Color x:Key="AccentHalo">#38F5A623</Color>
+    <Color x:Key="AccentHalo2">#1FF5A623</Color>
+    <Color x:Key="Vedette">#0E1A35</Color>
+    <Color x:Key="VedetteTexte">#F3F5FA</Color>
+    <Color x:Key="VedetteTexte2">#8B97B5</Color>
+    <Color x:Key="VedetteVoile">#14FFFFFF</Color>
+    <Color x:Key="VedetteTrait">#24FFFFFF</Color>
+    <Color x:Key="Normal">#14A44D</Color>
+    <Color x:Key="NormalDoux">#DDF7E6</Color>
+    <Color x:Key="Signalee">#F2711C</Color>
+    <Color x:Key="SignaleeDoux">#FFEBDC</Color>
+    <Color x:Key="Confirmee">#E02D4F</Color>
+    <Color x:Key="ConfirmeeDoux">#FFE3E8</Color>
+    <Color x:Key="Delestage">#2563EB</Color>
+    <Color x:Key="DelestageDoux">#DCE8FF</Color>
+    <Color x:Key="Violet">#7C3AED</Color>
+    <Color x:Key="VioletDoux">#EDE9FE</Color>
+    <Color x:Key="GrapheNeutre">#D3D9E4</Color>
+    <Color x:Key="CarteTerre">#EEF1EC</Color>
+    <Color x:Key="CarteEau">#CFE2F3</Color>
+    <Color x:Key="CarteRoute">#FFFFFF</Color>
+    <Color x:Key="Blanc">#FFFFFF</Color>
+</ResourceDictionary>

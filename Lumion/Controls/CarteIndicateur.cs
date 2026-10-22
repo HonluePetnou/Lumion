@@ -5,8 +5,8 @@ using Microsoft.Maui.Controls.Shapes;
 namespace Lumion.Controls;
 
 /// <summary>
-/// Indicateur du mois (écran Statistiques) : icône, libellé, valeur et variation.
-/// L'icône est au-dessus du texte pour tenir dans une demi-largeur d'écran de téléphone.
+/// Indicateur du mois (écran Statistiques) : valeur, libellé et variation par rapport au mois précédent.
+/// Un tiers de largeur d'écran : le texte reste court.
 /// </summary>
 public class CarteIndicateur : ContentView
 {
@@ -24,27 +24,16 @@ public class CarteIndicateur : ContentView
         }
         Content = new Border
         {
-            StrokeThickness = 0, StrokeShape = new RoundRectangle { CornerRadius = 18 }, Padding = 12,
-            BackgroundColor = i.Clair,
+            BackgroundColor = Palette.Surface, Stroke = Palette.Bordure, StrokeThickness = 1,
+            StrokeShape = new RoundRectangle { CornerRadius = 16 }, Padding = new Thickness(12),
             Content = new VerticalStackLayout
             {
                 Spacing = 2,
                 Children =
                 {
-                    new Border
-                    {
-                        StrokeShape = new Ellipse(), StrokeThickness = 0, WidthRequest = 36, HeightRequest = 36,
-                        HorizontalOptions = LayoutOptions.Start, BackgroundColor = i.Couleur, Margin = new Thickness(0, 0, 0, 6),
-                        Content = new Icone { Nom = i.Icone, Taille = 18, Couleur = Palette.Blanc }
-                    },
-                    new Label { Text = i.Libelle, FontSize = 12, TextColor = Palette.Encre },
-                    new Label
-                    {
-                        Text = i.Valeur, FontFamily = "OpenSansSemibold", FontSize = 20, TextColor = Palette.Encre,
-                        LineBreakMode = LineBreakMode.NoWrap
-                    },
-                    new Label { Text = i.Variation, FontFamily = "OpenSansSemibold", FontSize = 12, TextColor = i.CouleurVariation },
-                    new Label { Text = i.Comparaison, FontSize = 11, TextColor = Palette.Gris }
+                    new Label { Text = i.Valeur, Style = EnTete.Style("ChiffreMoyen"), FontSize = 17 },
+                    new Label { Text = i.Libelle, Style = EnTete.Style("TexteLegende") },
+                    new Label { Text = i.Variation, FontFamily = "JakartaBold", FontSize = 11, TextColor = i.CouleurVariation }
                 }
             }
         };

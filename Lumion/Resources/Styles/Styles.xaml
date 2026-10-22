@@ -1,84 +1,136 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <?xaml-comp compile="true" ?>
+<!--
+    Styles de la maquette v2 (Figma « Lumion — Redesign »). Les couleurs passent par DynamicResource :
+    changer de thème remplace le dictionnaire de couleurs et les styles suivent sans être rechargés.
+-->
 <ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
-    <!-- Hiérarchie typographique limitée à quelques tailles, espacements sur une grille de 4. -->
+    <!-- ===== Typographie : Plus Jakarta Sans, une taille par rôle ===== -->
 
     <Style TargetType="Label">
-        <Setter Property="TextColor" Value="{StaticResource Texte}" />
-        <Setter Property="FontFamily" Value="OpenSansRegular" />
-        <Setter Property="FontSize" Value="14" />
+        <Setter Property="TextColor" Value="{DynamicResource Texte}" />
+        <Setter Property="FontFamily" Value="Jakarta" />
+        <Setter Property="FontSize" Value="15" />
         <Setter Property="LineBreakMode" Value="WordWrap" />
     </Style>
 
-    <Style x:Key="TitrePage" TargetType="Label">
-        <Setter Property="FontFamily" Value="OpenSansSemibold" />
-        <Setter Property="FontSize" Value="26" />
-        <Setter Property="TextColor" Value="{StaticResource Encre}" />
+    <Style x:Key="TitreEcran" TargetType="Label">
+        <Setter Property="FontFamily" Value="JakartaExtraBold" />
+        <Setter Property="FontSize" Value="28" />
+        <Setter Property="TextColor" Value="{DynamicResource Texte}" />
     </Style>
 
-    <Style x:Key="SousTitrePage" TargetType="Label">
-        <Setter Property="FontSize" Value="14" />
-        <Setter Property="TextColor" Value="{StaticResource Gris}" />
+    <Style x:Key="TitrePage" TargetType="Label">
+        <Setter Property="FontFamily" Value="JakartaExtraBold" />
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="TextColor" Value="{DynamicResource Texte}" />
     </Style>
 
     <Style x:Key="TitreSection" TargetType="Label">
-        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontFamily" Value="JakartaBold" />
         <Setter Property="FontSize" Value="18" />
-        <Setter Property="TextColor" Value="{StaticResource Encre}" />
+        <Setter Property="TextColor" Value="{DynamicResource Texte}" />
     </Style>
 
-    <Style x:Key="TitreElement" TargetType="Label">
-        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+    <Style x:Key="TexteElement" TargetType="Label">
+        <Setter Property="FontFamily" Value="JakartaSemiBold" />
         <Setter Property="FontSize" Value="15" />
-        <Setter Property="TextColor" Value="{StaticResource Encre}" />
+        <Setter Property="TextColor" Value="{DynamicResource Texte}" />
     </Style>
 
-    <Style x:Key="Discret" TargetType="Label">
+    <Style x:Key="TexteSecondaire" TargetType="Label">
+        <Setter Property="FontFamily" Value="Jakarta" />
         <Setter Property="FontSize" Value="13" />
-        <Setter Property="TextColor" Value="{StaticResource Gris}" />
+        <Setter Property="TextColor" Value="{DynamicResource Texte2}" />
     </Style>
 
-    <Style x:Key="Chiffre" TargetType="Label">
-        <Setter Property="FontFamily" Value="OpenSansSemibold" />
-        <Setter Property="FontSize" Value="22" />
-        <Setter Property="TextColor" Value="{StaticResource Encre}" />
+    <Style x:Key="TexteLegende" TargetType="Label">
+        <Setter Property="FontFamily" Value="JakartaMedium" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextColor" Value="{DynamicResource Texte2}" />
+    </Style>
+
+    <Style x:Key="TexteBadge" TargetType="Label">
+        <Setter Property="FontFamily" Value="JakartaBold" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="LineBreakMode" Value="NoWrap" />
+    </Style>
+
+    <!-- Petit titre de section en capitales : « MES QUARTIERS », « AUJOURD'HUI »… -->
+    <Style x:Key="Surtitre" TargetType="Label">
+        <Setter Property="FontFamily" Value="JakartaBold" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextColor" Value="{DynamicResource Texte3}" />
+        <Setter Property="TextTransform" Value="Uppercase" />
+        <Setter Property="CharacterSpacing" Value="0.6" />
+    </Style>
+
+    <Style x:Key="ChiffreGrand" TargetType="Label">
+        <Setter Property="FontFamily" Value="JakartaExtraBold" />
+        <Setter Property="FontSize" Value="44" />
+        <Setter Property="LineBreakMode" Value="NoWrap" />
+    </Style>
+
+    <Style x:Key="ChiffreMoyen" TargetType="Label">
+        <Setter Property="FontFamily" Value="JakartaExtraBold" />
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="TextColor" Value="{DynamicResource Texte}" />
+        <Setter Property="LineBreakMode" Value="NoWrap" />
     </Style>
 
     <Style x:Key="Erreur" TargetType="Label">
+        <Setter Property="FontFamily" Value="JakartaMedium" />
         <Setter Property="FontSize" Value="13" />
-        <Setter Property="TextColor" Value="{StaticResource Rouge}" />
+        <Setter Property="TextColor" Value="{DynamicResource Confirmee}" />
     </Style>
 
+    <!-- ===== Pages ===== -->
+
     <Style TargetType="ContentPage" ApplyToDerivedTypes="True">
-        <Setter Property="BackgroundColor" Value="{StaticResource Fond}" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource Fond}" />
         <Setter Property="Shell.NavBarIsVisible" Value="False" />
         <!-- La navigation passe par la barre du bas (Controls/BarreOnglets), identique sur toutes les plateformes. -->
         <Setter Property="Shell.TabBarIsVisible" Value="False" />
     </Style>
 
     <Style TargetType="Shell" ApplyToDerivedTypes="True">
-        <Setter Property="Shell.BackgroundColor" Value="{StaticResource Blanc}" />
-        <Setter Property="Shell.TabBarBackgroundColor" Value="{StaticResource Blanc}" />
-        <Setter Property="Shell.TabBarForegroundColor" Value="{StaticResource PrimaireFonce}" />
-        <Setter Property="Shell.TabBarTitleColor" Value="{StaticResource PrimaireFonce}" />
-        <Setter Property="Shell.TabBarUnselectedColor" Value="{StaticResource Encre}" />
+        <Setter Property="Shell.BackgroundColor" Value="{DynamicResource Fond}" />
     </Style>
 
-    <!-- Cartes -->
+    <!-- ===== Cartes et pastilles ===== -->
+
     <Style x:Key="Carte" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="{StaticResource Blanc}" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource Surface}" />
         <Setter Property="StrokeShape" Value="RoundRectangle 20" />
-        <Setter Property="Stroke" Value="{StaticResource Bordure}" />
+        <Setter Property="Stroke" Value="{DynamicResource Bordure}" />
         <Setter Property="StrokeThickness" Value="1" />
         <Setter Property="Padding" Value="16" />
     </Style>
 
+    <!-- Bloc bleu nuit mis en avant : chrono, chiffre vedette, identité. Bleu nuit dans les deux thèmes. -->
+    <Style x:Key="BlocVedette" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{DynamicResource Vedette}" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 24" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="Padding" Value="18" />
+    </Style>
+
     <Style x:Key="Pastille" TargetType="Border">
-        <Setter Property="StrokeShape" Value="RoundRectangle 14" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 999" />
         <Setter Property="StrokeThickness" Value="0" />
         <Setter Property="Padding" Value="10,5" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <!-- Pastille d'icône carrée arrondie (listes, réglages) -->
+    <Style x:Key="Tuile" TargetType="Border">
+        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="WidthRequest" Value="36" />
+        <Setter Property="HeightRequest" Value="36" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource Surface2}" />
         <Setter Property="VerticalOptions" Value="Center" />
     </Style>
 
@@ -90,16 +142,33 @@
         <Setter Property="VerticalOptions" Value="Center" />
     </Style>
 
-    <!-- Boutons : cibles tactiles d'au moins 48 dp. -->
+    <!-- Bouton icône d'en-tête : retour, filtre, action -->
+    <Style x:Key="BoutonIcone" TargetType="Border">
+        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+        <Setter Property="Stroke" Value="{DynamicResource Bordure}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource Surface}" />
+        <Setter Property="WidthRequest" Value="44" />
+        <Setter Property="HeightRequest" Value="44" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <Style x:Key="Separateur" TargetType="BoxView">
+        <Setter Property="HeightRequest" Value="1" />
+        <Setter Property="Color" Value="{DynamicResource Bordure}" />
+    </Style>
+
+    <!-- ===== Boutons : cibles tactiles d'au moins 48 dp ===== -->
+
     <Style TargetType="Button">
-        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontFamily" Value="JakartaBold" />
         <Setter Property="FontSize" Value="15" />
         <Setter Property="CornerRadius" Value="16" />
-        <Setter Property="MinimumHeightRequest" Value="48" />
-        <Setter Property="Padding" Value="16,10" />
+        <Setter Property="MinimumHeightRequest" Value="52" />
+        <Setter Property="Padding" Value="18,12" />
         <Setter Property="BorderWidth" Value="0" />
-        <Setter Property="BackgroundColor" Value="{StaticResource Primaire}" />
-        <Setter Property="TextColor" Value="{StaticResource Encre}" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource Accent}" />
+        <Setter Property="TextColor" Value="{DynamicResource SurAccent}" />
         <Setter Property="VisualStateManager.VisualStateGroups">
             <VisualStateGroupList>
                 <VisualStateGroup x:Name="CommonStates">
@@ -111,8 +180,7 @@
                     </VisualState>
                     <VisualState x:Name="Disabled">
                         <VisualState.Setters>
-                            <Setter Property="BackgroundColor" Value="{StaticResource FondGris}" />
-                            <Setter Property="TextColor" Value="{StaticResource GrisClair}" />
+                            <Setter Property="Opacity" Value="0.45" />
                         </VisualState.Setters>
                     </VisualState>
                 </VisualStateGroup>
@@ -121,79 +189,120 @@
     </Style>
 
     <Style x:Key="BoutonSecondaire" TargetType="Button">
-        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontFamily" Value="JakartaBold" />
         <Setter Property="FontSize" Value="15" />
         <Setter Property="CornerRadius" Value="16" />
-        <Setter Property="MinimumHeightRequest" Value="48" />
-        <Setter Property="Padding" Value="16,10" />
-        <Setter Property="BackgroundColor" Value="{StaticResource FondGris}" />
-        <Setter Property="TextColor" Value="{StaticResource Encre}" />
+        <Setter Property="MinimumHeightRequest" Value="52" />
+        <Setter Property="Padding" Value="18,12" />
         <Setter Property="BorderWidth" Value="0" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource Surface2}" />
+        <Setter Property="TextColor" Value="{DynamicResource Texte}" />
     </Style>
 
-    <Style x:Key="BoutonLien" TargetType="Button">
-        <Setter Property="FontFamily" Value="OpenSansSemibold" />
-        <Setter Property="FontSize" Value="14" />
+    <Style x:Key="BoutonContour" TargetType="Button">
+        <Setter Property="FontFamily" Value="JakartaBold" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="MinimumHeightRequest" Value="52" />
+        <Setter Property="Padding" Value="18,12" />
+        <Setter Property="BorderWidth" Value="1.5" />
+        <Setter Property="BorderColor" Value="{DynamicResource Bordure}" />
         <Setter Property="BackgroundColor" Value="Transparent" />
-        <Setter Property="TextColor" Value="{StaticResource PrimaireFonce}" />
+        <Setter Property="TextColor" Value="{DynamicResource Texte}" />
+    </Style>
+
+    <Style x:Key="BoutonSucces" TargetType="Button">
+        <Setter Property="FontFamily" Value="JakartaBold" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="MinimumHeightRequest" Value="52" />
+        <Setter Property="Padding" Value="14,12" />
         <Setter Property="BorderWidth" Value="0" />
-        <Setter Property="Padding" Value="8,4" />
-        <Setter Property="MinimumHeightRequest" Value="48" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource Normal}" />
+        <Setter Property="TextColor" Value="{DynamicResource Blanc}" />
     </Style>
 
     <Style x:Key="BoutonDanger" TargetType="Button">
-        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontFamily" Value="JakartaBold" />
         <Setter Property="FontSize" Value="15" />
         <Setter Property="CornerRadius" Value="16" />
-        <Setter Property="MinimumHeightRequest" Value="48" />
-        <Setter Property="Padding" Value="16,10" />
-        <Setter Property="BackgroundColor" Value="{StaticResource Rouge}" />
-        <Setter Property="TextColor" Value="{StaticResource Blanc}" />
+        <Setter Property="MinimumHeightRequest" Value="52" />
+        <Setter Property="Padding" Value="14,12" />
         <Setter Property="BorderWidth" Value="0" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource ConfirmeeDoux}" />
+        <Setter Property="TextColor" Value="{DynamicResource Confirmee}" />
     </Style>
 
-    <!-- Champs de saisie -->
+    <Style x:Key="BoutonLien" TargetType="Button">
+        <Setter Property="FontFamily" Value="JakartaBold" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="TextColor" Value="{DynamicResource AccentTexte}" />
+        <Setter Property="BorderWidth" Value="0" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="MinimumHeightRequest" Value="44" />
+    </Style>
+
+    <!-- ===== Champs de saisie ===== -->
+
     <Style TargetType="Entry">
-        <Setter Property="FontFamily" Value="OpenSansRegular" />
+        <Setter Property="FontFamily" Value="Jakarta" />
         <Setter Property="FontSize" Value="16" />
-        <Setter Property="TextColor" Value="{StaticResource Encre}" />
-        <Setter Property="PlaceholderColor" Value="{StaticResource GrisClair}" />
+        <Setter Property="TextColor" Value="{DynamicResource Texte}" />
+        <Setter Property="PlaceholderColor" Value="{DynamicResource Texte3}" />
         <Setter Property="BackgroundColor" Value="Transparent" />
         <Setter Property="MinimumHeightRequest" Value="48" />
     </Style>
 
     <Style TargetType="Editor">
-        <Setter Property="FontFamily" Value="OpenSansRegular" />
+        <Setter Property="FontFamily" Value="Jakarta" />
         <Setter Property="FontSize" Value="15" />
-        <Setter Property="TextColor" Value="{StaticResource Encre}" />
-        <Setter Property="PlaceholderColor" Value="{StaticResource GrisClair}" />
+        <Setter Property="TextColor" Value="{DynamicResource Texte}" />
+        <Setter Property="PlaceholderColor" Value="{DynamicResource Texte3}" />
         <Setter Property="BackgroundColor" Value="Transparent" />
     </Style>
 
     <Style TargetType="Picker">
-        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontFamily" Value="JakartaSemiBold" />
         <Setter Property="FontSize" Value="15" />
-        <Setter Property="TextColor" Value="{StaticResource Encre}" />
-        <Setter Property="TitleColor" Value="{StaticResource Gris}" />
+        <Setter Property="TextColor" Value="{DynamicResource Texte}" />
+        <Setter Property="TitleColor" Value="{DynamicResource Texte2}" />
         <Setter Property="BackgroundColor" Value="Transparent" />
-        <Setter Property="MinimumHeightRequest" Value="48" />
+        <Setter Property="MinimumHeightRequest" Value="44" />
+    </Style>
+
+    <Style TargetType="DatePicker">
+        <Setter Property="FontFamily" Value="JakartaSemiBold" />
+        <Setter Property="TextColor" Value="{DynamicResource Texte}" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
+    </Style>
+
+    <Style TargetType="TimePicker">
+        <Setter Property="FontFamily" Value="JakartaSemiBold" />
+        <Setter Property="TextColor" Value="{DynamicResource Texte}" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
     </Style>
 
     <Style x:Key="Champ" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="{StaticResource Blanc}" />
-        <Setter Property="StrokeShape" Value="RoundRectangle 16" />
-        <Setter Property="Stroke" Value="{StaticResource Bordure}" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource Surface}" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 14" />
+        <Setter Property="Stroke" Value="{DynamicResource Bordure}" />
         <Setter Property="StrokeThickness" Value="1" />
         <Setter Property="Padding" Value="14,2" />
+        <Setter Property="MinimumHeightRequest" Value="52" />
     </Style>
 
     <Style TargetType="Switch">
-        <Setter Property="OnColor" Value="{StaticResource Primaire}" />
-        <Setter Property="ThumbColor" Value="{StaticResource Blanc}" />
+        <Setter Property="OnColor" Value="{DynamicResource Accent}" />
+        <Setter Property="ThumbColor" Value="{DynamicResource Blanc}" />
     </Style>
 
     <Style TargetType="ActivityIndicator">
-        <Setter Property="Color" Value="{StaticResource Primaire}" />
+        <Setter Property="Color" Value="{DynamicResource Accent}" />
+    </Style>
+
+    <Style TargetType="ProgressBar">
+        <Setter Property="ProgressColor" Value="{DynamicResource Accent}" />
     </Style>
 
 </ResourceDictionary>

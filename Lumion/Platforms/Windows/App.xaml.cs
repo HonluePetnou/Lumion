@@ -17,6 +17,11 @@ public partial class App : MauiWinUIApplication
 	public App()
 	{
 		this.InitializeComponent();
+#if DEBUG
+		// En développement : l'exception d'origine est écrite dans %TEMP%\lumion-plantage.txt.
+		UnhandledException += (_, e) => System.IO.File.WriteAllText(
+			System.IO.Path.Combine(System.IO.Path.GetTempPath(), "lumion-plantage.txt"), e.Exception.ToString());
+#endif
 	}
 
 	protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();

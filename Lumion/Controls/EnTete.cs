@@ -1,90 +1,165 @@
-using System.ComponentModel;
+using System.Windows.Input;
 using Lumion.Services;
 using Microsoft.Maui.Controls.Shapes;
+using Path = Microsoft.Maui.Controls.Shapes.Path;
 
 namespace Lumion.Controls;
 
-/// <summary>Logo « Lumion », dont le « o » ambre rappelle une ampoule allumée.</summary>
-public class Logo : Label
+/// <summary>
+/// Logo « Lumion » : le « o » ambre est une ampoule allumée, surmontée de trois rayons
+/// (composant Logo de la maquette Figma).
+/// </summary>
+public class Logo : ContentView
 {
+    public static readonly BindableProperty TailleProperty = BindableProperty.Create(nameof(Taille), typeof(double),
+        typeof(Logo), 28.0, propertyChanged: (b, _, _) => ((Logo)b).Construire());
+
+    /// <summary>Sur fond bleu nuit (en-têtes, écran de chargement) : lettres claires dans les deux thèmes.</summary>
+    public static readonly BindableProperty SurNuitProperty = BindableProperty.Create(nameof(SurNuit), typeof(bool),
+        typeof(Logo), false, propertyChanged: (b, _, _) => ((Logo)b).Construire());
+
+    public double Taille { get => (double)GetValue(TailleProperty); set => SetValue(TailleProperty, value); }
+    public bool SurNuit { get => (bool)GetValue(SurNuitProperty); set => SetValue(SurNuitProperty, value); }
+
     public Logo()
     {
-        FontFamily = "OpenSansSemibold";
-        FontSize = 28;
         VerticalOptions = LayoutOptions.Center;
-        FormattedText = new FormattedString
-        {
-            Spans =
-            {
-                new Span { Text = "Lumi", TextColor = Palette.Encre },
-                new Span { Text = "o", TextColor = Palette.Primaire },
-                new Span { Text = "n", TextColor = Palette.Encre }
-            }
-        };
         SemanticProperties.SetDescription(this, "Lumion");
+        Construire();
+    }
+
+    private void Construire()
+    {
+        var encre = SurNuit ? Palette.VedetteTexte : Palette.Texte;
+        Label Lettres(string texte, Color couleur) => new()
+        {
+            Text = texte, FontFamily = "JakartaExtraBold", FontSize = Taille, TextColor = couleur,
+            CharacterSpacing = -0.6, VerticalOptions = LayoutOptions.End, LineBreakMode = LineBreakMode.NoWrap
+        };
+
+        // Rayons du logo : trois traits sur une grille de 16 × 6, posés au-dessus du « o ».
+        double k = Taille / 28;
+        var rayons = new Path
+        {
+            Data = (Geometry)new PathGeometryConverter().ConvertFromInvariantString("M 8 0 L 8 4 M 0 3 L 3 6 M 16 3 L 13 6")!,
+            Stroke = new SolidColorBrush(Palette.Accent), StrokeThickness = 2.2 * k, StrokeLineCap = PenLineCap.Round,
+            Aspect = Stretch.Fill, WidthRequest = 16 * k, HeightRequest = 6 * k,
+            HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Start,
+            TranslationY = -1 * k
+        };
+        var o = new Grid { Children = { Lettres("o", Palette.Accent), rayons } };
+
+        Content = new HorizontalStackLayout
+        {
+            Spacing = 0,
+            Children = { Lettres("Lumi", encre), o, Lettres("n", encre) }
+        };
     }
 }
 
-/// <summary>Bandeau commun aux onglets : logo, ville couverte et accès aux notifications.</summary>
+/// <summary>
+/// En-tête de page : bouton retour facultatif, titre et action à droite (icône ou lien texte).
+/// </summary>
 public class EnTete : ContentView
 {
-    private readonly Session _session = App.Service<Session>();
-    private readonly Ellipse _point = new()
-    {
-        Fill = new SolidColorBrush(Palette.Primaire), WidthRequest = 11, HeightRequest = 11,
-        HorizontalOptions = LayoutOptions.End, VerticalOptions = LayoutOptions.Start, Margin = new Thickness(0, 8, 8, 0)
-    };
+    public static readonly BindableProperty TitreProperty = BindableProperty.Create(nameof(Titre), typeof(string),
+        typeof(EnTete), "", propertyChanged: (b, _, _) => ((EnTete)b).Construire());
+
+    public static readonly BindableProperty RetourProperty = BindableProperty.Create(nameof(Retour), typeof(bool),
+        typeof(EnTete), false, propertyChanged: (b, _, _) => ((EnTete)b).Construire());
+
+    public static readonly BindableProperty IconeActionProperty = BindableProperty.Create(nameof(IconeAction), typeof(string),
+        typeof(EnTete), null, propertyChanged: (b, _, _) => ((EnTete)b).Construire());
+
+    public static readonly BindableProperty TexteActionProperty = BindableProperty.Create(nameof(TexteAction), typeof(string),
+        typeof(EnTete), null, propertyChanged: (b, _, _) => ((EnTete)b).Construire());
+
+    public static readonly BindableProperty CommandeProperty = BindableProperty.Create(nameof(Commande), typeof(ICommand),
+        typeof(EnTete), null);
+
+    public static readonly BindableProperty DescriptionActionProperty = BindableProperty.Create(nameof(DescriptionAction),
+        typeof(string), typeof(EnTete), null, propertyChanged: (b, _, _) => ((EnTete)b).Construire());
+
+    public string Titre { get => (string)GetValue(TitreProperty); set => SetValue(TitreProperty, value); }
+    public bool Retour { get => (bool)GetValue(RetourProperty); set => SetValue(RetourProperty, value); }
+    public string? IconeAction { get => (string?)GetValue(IconeActionProperty); set => SetValue(IconeActionProperty, value); }
+    public string? TexteAction { get => (string?)GetValue(TexteActionProperty); set => SetValue(TexteActionProperty, value); }
+    public ICommand? Commande { get => (ICommand?)GetValue(CommandeProperty); set => SetValue(CommandeProperty, value); }
+    public string? DescriptionAction { get => (string?)GetValue(DescriptionActionProperty); set => SetValue(DescriptionActionProperty, value); }
+
+    /// <summary>Levé au toucher de l'action de droite.</summary>
+    public event EventHandler? Action;
 
     public EnTete()
     {
-        var ville = new HorizontalStackLayout
-        {
-            Spacing = 6, VerticalOptions = LayoutOptions.Center,
-            Children =
-            {
-                new Icone { Nom = "Epingle", Taille = 20 },
-                new Label { Text = "Douala", FontFamily = "OpenSansSemibold", FontSize = 16, TextColor = Palette.Encre, VerticalOptions = LayoutOptions.Center }
-            }
-        };
-
-        var cloche = new Grid
-        {
-            WidthRequest = 48, HeightRequest = 48, BackgroundColor = Colors.Transparent,
-            Children = { new Icone { Nom = "Cloche", Taille = 26 }, _point }
-        };
-        SemanticProperties.SetDescription(cloche, "Notifications");
-        var toucher = new TapGestureRecognizer();
-        toucher.Tapped += async (_, _) =>
-        {
-            if (await Nav.ExigerCompte(_session)) await Nav.Aller("notifications");
-        };
-        cloche.GestureRecognizers.Add(toucher);
-
-        var grille = new Grid
-        {
-            Padding = new Thickness(20, 8, 12, 4), ColumnSpacing = 16,
-            ColumnDefinitions = { new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) }
-        };
-        grille.Add(new Logo(), 0);
-        grille.Add(ville, 1);
-        grille.Add(cloche, 2);
-        Content = grille;
-
-        Loaded += (_, _) =>
-        {
-            _session.PropertyChanged += Actualiser;
-            Actualiser(null, null);
-        };
-        Unloaded += (_, _) => _session.PropertyChanged -= Actualiser;
+        Padding = new Thickness(20, 8, 20, 4);
+        Construire();
     }
 
-    private void Actualiser(object? sender, PropertyChangedEventArgs? e) => _point.IsVisible = _session.ANonLues;
+    private void Construire()
+    {
+        var grille = new Grid
+        {
+            ColumnSpacing = 12, MinimumHeightRequest = 48,
+            ColumnDefinitions = { new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) }
+        };
+
+        if (Retour)
+        {
+            var retour = Bouton("ChevronGauche", "Retour");
+            retour.GestureRecognizers.Add(Toucher(async () => await Nav.Retour()));
+            grille.Add(retour, 0);
+        }
+
+        grille.Add(new Label
+        {
+            Text = Titre, Style = Style(Retour ? "TitreSection" : "TitreEcran"),
+            FontFamily = "JakartaExtraBold", VerticalOptions = LayoutOptions.Center, LineBreakMode = LineBreakMode.TailTruncation
+        }, 1);
+
+        View? action = null;
+        if (TexteAction is { Length: > 0 } texte)
+            action = new Label
+            {
+                Text = texte, FontFamily = "JakartaBold", FontSize = 13, TextColor = Palette.AccentTexte,
+                VerticalOptions = LayoutOptions.Center, Padding = new Thickness(8, 12)
+            };
+        else if (IconeAction is { Length: > 0 } icone)
+            action = Bouton(icone, DescriptionAction ?? Titre);
+        if (action is not null)
+        {
+            action.GestureRecognizers.Add(Toucher(() =>
+            {
+                Action?.Invoke(this, EventArgs.Empty);
+                if (Commande?.CanExecute(null) == true) Commande.Execute(null);
+                return Task.CompletedTask;
+            }));
+            grille.Add(action, 2);
+        }
+        Content = grille;
+    }
+
+    private static Border Bouton(string icone, string description)
+    {
+        var bouton = new Border { Style = Style("BoutonIcone"), Content = new Icone { Nom = icone, Taille = 20 } };
+        SemanticProperties.SetDescription(bouton, description);
+        return bouton;
+    }
+
+    private static TapGestureRecognizer Toucher(Func<Task> action)
+    {
+        var toucher = new TapGestureRecognizer();
+        toucher.Tapped += async (_, _) => await action();
+        return toucher;
+    }
+
+    internal static Style Style(string cle) => (Style)Application.Current!.Resources[cle];
 }
 
-/// <summary>Fil d'étapes de l'inscription : Numéro, Code OTP, Quartier.</summary>
+/// <summary>Progression de l'inscription : trois barres et le nom de l'étape.</summary>
 public class Etapes : ContentView
 {
-    private static readonly string[] Libelles = ["Numéro", "Code OTP", "Quartier"];
+    private static readonly string[] Libelles = ["Vos informations", "Code SMS", "Quartier"];
 
     public static readonly BindableProperty EtapeProperty = BindableProperty.Create(nameof(Etape), typeof(int),
         typeof(Etapes), 1, propertyChanged: (b, _, _) => ((Etapes)b).Construire());
@@ -95,44 +170,28 @@ public class Etapes : ContentView
 
     private void Construire()
     {
-        var grille = new Grid
+        var barres = new Grid { ColumnSpacing = 6 };
+        for (int i = 1; i <= 3; i++)
         {
-            ColumnDefinitions = { new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) },
-            RowDefinitions = { new(GridLength.Auto), new(GridLength.Auto) },
-            RowSpacing = 6
-        };
-        for (int i = 0; i < 3; i++)
-        {
-            int numero = i + 1;
-            bool faite = numero < Etape, active = numero == Etape;
-            var rond = new Border
+            barres.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            barres.Add(new BoxView
             {
-                StrokeShape = new Ellipse(), StrokeThickness = 0, WidthRequest = 40, HeightRequest = 40,
-                HorizontalOptions = LayoutOptions.Center,
-                BackgroundColor = faite || active ? Palette.Primaire : Palette.FondGris,
-                Content = faite
-                    ? new Icone { Nom = "Check", Couleur = Palette.Blanc, Taille = 20 }
-                    : new Label
-                    {
-                        Text = numero.ToString(), FontFamily = "OpenSansSemibold", FontSize = 16,
-                        TextColor = active ? Palette.Blanc : Palette.Gris,
-                        HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center
-                    }
-            };
-            grille.Add(rond, i * 2, 0);
-            grille.Add(new Label
-            {
-                Text = Libelles[i], FontSize = 13, HorizontalOptions = LayoutOptions.Center,
-                FontFamily = faite || active ? "OpenSansSemibold" : "OpenSansRegular",
-                TextColor = faite || active ? Palette.Encre : Palette.Gris
-            }, i * 2, 1);
-            if (i < 2)
-                grille.Add(new BoxView
-                {
-                    HeightRequest = 3, CornerRadius = 2, VerticalOptions = LayoutOptions.Center, Margin = new Thickness(6, 0),
-                    Color = faite ? Palette.Primaire : Palette.Bordure
-                }, i * 2 + 1, 0);
+                HeightRequest = 5, CornerRadius = 3, Color = i <= Etape ? Palette.Accent : Palette.Bordure
+            }, i - 1);
         }
-        Content = grille;
+        Content = new VerticalStackLayout
+        {
+            Spacing = 8,
+            Children =
+            {
+                barres,
+                new Label
+                {
+                    Text = $"Étape {Etape} sur 3 · {Libelles[Math.Clamp(Etape, 1, 3) - 1]}", Style = EnTete.Style("TexteLegende"),
+                    FontFamily = "JakartaSemiBold"
+                }
+            }
+        };
+        SemanticProperties.SetDescription(this, $"Étape {Etape} sur 3");
     }
 }

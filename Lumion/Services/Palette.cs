@@ -2,41 +2,65 @@ using Lumion.Core.Models;
 
 namespace Lumion.Services;
 
-/// <summary>Couleurs de la charte (mêmes valeurs que Colors.xaml) et habillage des statuts.</summary>
+/// <summary>
+/// Couleurs du thème courant (Resources/Styles/Theme*.xaml) pour le code C#, et habillage des statuts.
+/// Les valeurs sont relues à chaque accès : elles suivent le passage du thème clair au sombre.
+/// </summary>
 public static class Palette
 {
-    public static readonly Color Primaire = Color.FromArgb("#FDB022");
-    public static readonly Color PrimaireFonce = Color.FromArgb("#DC8A04");
-    public static readonly Color PrimaireClair = Color.FromArgb("#FFF4DB");
-    public static readonly Color Encre = Color.FromArgb("#0F1B3D");
-    public static readonly Color Gris = Color.FromArgb("#667085");
-    public static readonly Color GrisClair = Color.FromArgb("#98A2B3");
-    public static readonly Color FondGris = Color.FromArgb("#EEF0F4");
-    public static readonly Color Bordure = Color.FromArgb("#E4E7EC");
-    public static readonly Color Blanc = Colors.White;
-    public static readonly Color Vert = Color.FromArgb("#16A34A");
-    public static readonly Color VertClair = Color.FromArgb("#DCFCE7");
-    public static readonly Color Orange = Color.FromArgb("#F97316");
-    public static readonly Color OrangeClair = Color.FromArgb("#FFEDD5");
-    public static readonly Color Rouge = Color.FromArgb("#E11D48");
-    public static readonly Color RougeClair = Color.FromArgb("#FFE4E6");
-    public static readonly Color Bleu = Color.FromArgb("#2563EB");
-    public static readonly Color BleuClair = Color.FromArgb("#DBEAFE");
-    public static readonly Color Violet = Color.FromArgb("#7C3AED");
-    public static readonly Color VioletClair = Color.FromArgb("#EDE9FE");
+    private static Color R(string cle) =>
+        Application.Current?.Resources.TryGetValue(cle, out var v) == true && v is Color c ? c : Colors.Magenta;
+
+    public static Color Fond => R("Fond");
+    public static Color Surface => R("Surface");
+    public static Color Surface2 => R("Surface2");
+    public static Color Bordure => R("Bordure");
+    public static Color Texte => R("Texte");
+    public static Color Texte2 => R("Texte2");
+    public static Color Texte3 => R("Texte3");
+    public static Color Accent => R("Accent");
+    public static Color AccentTexte => R("AccentTexte");
+    public static Color AccentDoux => R("AccentDoux");
+    public static Color SurAccent => R("SurAccent");
+    public static Color Vedette => R("Vedette");
+    public static Color VedetteTexte => R("VedetteTexte");
+    public static Color VedetteTexte2 => R("VedetteTexte2");
+    public static Color GrapheNeutre => R("GrapheNeutre");
+    public static Color Blanc => R("Blanc");
+
+    // Statuts : couleurs réservées, toujours doublées d'une icône et d'un libellé (ENF6).
+    public static Color Vert => R("Normal");
+    public static Color VertClair => R("NormalDoux");
+    public static Color Orange => R("Signalee");
+    public static Color OrangeClair => R("SignaleeDoux");
+    public static Color Rouge => R("Confirmee");
+    public static Color RougeClair => R("ConfirmeeDoux");
+    public static Color Bleu => R("Delestage");
+    public static Color BleuClair => R("DelestageDoux");
+    public static Color Violet => R("Violet");
+    public static Color VioletClair => R("VioletDoux");
+
+    // Anciens noms de la charte v1, gardés pour les vues-modèles.
+    public static Color Primaire => Accent;
+    public static Color PrimaireFonce => AccentTexte;
+    public static Color PrimaireClair => AccentDoux;
+    public static Color Encre => Texte;
+    public static Color Gris => Texte2;
+    public static Color GrisClair => Texte3;
+    public static Color FondGris => Surface2;
 
     /// <summary>Chaque statut associe une couleur, une icône et un libellé (ENF6, accessibilité daltoniens).</summary>
     public static (Color Couleur, Color Clair, string Icone, string Libelle) Statut(StatutQuartier statut) => statut switch
     {
-        StatutQuartier.Signalee => (Orange, OrangeClair, "Eclair", "Coupure signalée"),
-        StatutQuartier.Confirmee => (Rouge, RougeClair, "Eclair", "Coupure confirmée"),
-        StatutQuartier.Delestage => (Bleu, BleuClair, "Horloge", "Délestage annoncé"),
+        StatutQuartier.Signalee => (Orange, OrangeClair, "Alerte", "À confirmer"),
+        StatutQuartier.Confirmee => (Rouge, RougeClair, "Eclair", "Sans courant"),
+        StatutQuartier.Delestage => (Bleu, BleuClair, "Calendrier", "Délestage"),
         _ => (Vert, VertClair, "Check", "Courant normal")
     };
 
     public static (Color Couleur, Color Clair, string Icone, string Libelle) Statut(StatutSignalement statut) => statut switch
     {
-        StatutSignalement.Actif => (PrimaireFonce, PrimaireClair, "Horloge", "En cours"),
+        StatutSignalement.Actif => (AccentTexte, AccentDoux, "Horloge", "En cours"),
         StatutSignalement.Valide => (Vert, VertClair, "Check", "Validé"),
         StatutSignalement.Rejete => (Rouge, RougeClair, "Croix", "Rejeté"),
         StatutSignalement.Expire => (Gris, FondGris, "Sablier", "Expiré"),
@@ -54,8 +78,12 @@ public static class Palette
         };
     }
 
-    private static readonly (Color, Color)[] Avatars =
-        [(Bleu, BleuClair), (Violet, VioletClair), (Vert, VertClair), (Rouge, RougeClair), (PrimaireFonce, PrimaireClair)];
-
-    public static (Color Couleur, Color Clair) Avatar(int id) => Avatars[Math.Abs(id) % Avatars.Length];
+    public static (Color Couleur, Color Clair) Avatar(int id) => (Math.Abs(id) % 5) switch
+    {
+        0 => (Bleu, BleuClair),
+        1 => (Violet, VioletClair),
+        2 => (Vert, VertClair),
+        3 => (Rouge, RougeClair),
+        _ => (AccentTexte, AccentDoux)
+    };
 }

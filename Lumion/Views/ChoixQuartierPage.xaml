@@ -3,62 +3,82 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:c="clr-namespace:Lumion.Controls"
              xmlns:m="clr-namespace:Lumion.Core.Models;assembly=Lumion.Core"
-             x:Class="Lumion.Views.ChoixQuartierPage"
-             BackgroundColor="{StaticResource Blanc}"
-             Shell.TabBarIsVisible="False">
-    <Grid RowDefinitions="Auto,*,Auto" Padding="24,16,24,16" RowSpacing="14">
-        <VerticalStackLayout Spacing="14">
-            <c:Logo HorizontalOptions="Start" />
+             x:Class="Lumion.Views.ChoixQuartierPage">
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+        <c:EnTete Titre="Votre quartier" Retour="True" />
+
+        <VerticalStackLayout Grid.Row="1" Padding="24,8,24,8" Spacing="16">
             <c:Etapes Etape="3" />
-            <VerticalStackLayout Spacing="4">
-                <Label Text="Choisir votre quartier" Style="{StaticResource TitreSection}" FontSize="22" />
-                <Label Style="{StaticResource SousTitrePage}"
-                       Text="Vous serez abonné aux alertes de ce quartier. Vous pourrez en suivre d'autres ensuite." />
+            <VerticalStackLayout Spacing="6">
+                <Label Text="Où habitez-vous ?" Style="{StaticResource TitrePage}" />
+                <Label Style="{StaticResource TexteSecondaire}"
+                       Text="Vous serez prévenu dès qu'une coupure y est signalée. Vous pourrez en suivre d'autres plus tard." />
             </VerticalStackLayout>
 
-            <Button x:Name="Position" Text="Utiliser ma position" Style="{StaticResource BoutonSecondaire}"
-                    Clicked="Localiser" />
-            <Label x:Name="Info" Style="{StaticResource Discret}" IsVisible="False" />
+            <!-- Proposition par GPS (UC01, étape 5) -->
+            <Border Style="{StaticResource BlocVedette}" Padding="14" StrokeShape="RoundRectangle 18">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="Localiser" />
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                    <Border WidthRequest="42" HeightRequest="42" StrokeThickness="0" StrokeShape="RoundRectangle 12"
+                            BackgroundColor="{StaticResource Accent}">
+                        <c:Icone Nom="Cible" Taille="20" Couleur="{StaticResource SurAccent}" />
+                    </Border>
+                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                        <Label x:Name="Position" Text="Utiliser ma position" Style="{StaticResource TexteElement}" FontFamily="JakartaBold"
+                               TextColor="{StaticResource VedetteTexte}" />
+                        <Label x:Name="Info" Text="Le GPS propose votre quartier" Style="{StaticResource TexteLegende}"
+                               TextColor="{StaticResource VedetteTexte2}" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
 
             <Border Style="{StaticResource Champ}">
                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                    <c:Icone Nom="Recherche" Taille="20" Couleur="{StaticResource Gris}" />
-                    <Entry Grid.Column="1" x:Name="Recherche" Placeholder="Rechercher un quartier à Douala…"
+                    <c:Icone Nom="Recherche" Taille="18" Couleur="{StaticResource Texte2}" />
+                    <Entry Grid.Column="1" x:Name="Recherche" Placeholder="Ou chercher un quartier"
                            TextChanged="Filtrer" SemanticProperties.Description="Rechercher un quartier" />
                 </Grid>
             </Border>
         </VerticalStackLayout>
 
-        <CollectionView Grid.Row="1" x:Name="Liste" SelectionMode="Single" SelectionChanged="Choisir">
+        <CollectionView Grid.Row="2" x:Name="Liste" SelectionMode="Single" SelectionChanged="Choisir" Margin="24,0">
             <CollectionView.EmptyView>
-                <Label Text="Aucun quartier ne correspond à votre recherche." Style="{StaticResource Discret}"
+                <Label Text="Aucun quartier ne correspond à votre recherche." Style="{StaticResource TexteSecondaire}"
                        HorizontalTextAlignment="Center" Margin="0,24" />
             </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="m:Quartier">
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12" Padding="4,10" MinimumHeightRequest="56">
+                    <Grid Padding="0,3">
+                        <!-- L'état « sélectionné » s'applique à la racine du modèle et colore la carte. -->
                         <VisualStateManager.VisualStateGroups>
                             <VisualStateGroupList>
                                 <VisualStateGroup x:Name="CommonStates">
                                     <VisualState x:Name="Normal" />
                                     <VisualState x:Name="Selected">
                                         <VisualState.Setters>
-                                            <Setter Property="BackgroundColor" Value="{StaticResource PrimaireClair}" />
+                                            <Setter TargetName="Case" Property="Border.BackgroundColor" Value="{StaticResource AccentDoux}" />
+                                            <Setter TargetName="Case" Property="Border.Stroke" Value="{StaticResource Accent}" />
                                         </VisualState.Setters>
                                     </VisualState>
                                 </VisualStateGroup>
                             </VisualStateGroupList>
                         </VisualStateManager.VisualStateGroups>
-                        <c:Icone Nom="Epingle" Taille="20" Couleur="{StaticResource Gris}" />
-                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                            <Label Text="{Binding Nom}" Style="{StaticResource TitreElement}" />
-                            <Label Text="{Binding Arrondissement}" Style="{StaticResource Discret}" />
-                        </VerticalStackLayout>
+                        <Border x:Name="Case" Style="{StaticResource Carte}" Padding="14,10" StrokeShape="RoundRectangle 14">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <VerticalStackLayout VerticalOptions="Center">
+                                    <Label Text="{Binding Nom}" Style="{StaticResource TexteElement}" />
+                                    <Label Text="{Binding Arrondissement}" Style="{StaticResource TexteLegende}" TextColor="{StaticResource Texte3}" />
+                                </VerticalStackLayout>
+                                <c:Icone Grid.Column="1" Nom="ChevronDroite" Taille="16" Couleur="{StaticResource Texte3}" />
+                            </Grid>
+                        </Border>
                     </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <Button Grid.Row="2" x:Name="Terminer" Text="Créer mon compte" Clicked="Creer" IsEnabled="False" />
+        <Button Grid.Row="3" x:Name="Terminer" Text="Créer mon compte" Clicked="Creer" IsEnabled="False" Margin="24,8,24,20" />
     </Grid>
 </ContentPage>

@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Lumion.Core;
 using Lumion.Core.Models;
-using Lumion.Core.Services;
+using Lumion.Core.Api;
 using Lumion.Services;
 
 namespace Lumion.ViewModels;
@@ -20,6 +20,8 @@ public partial class CarteModeration : ObservableObject
     public string Fiabilite { get; init; } = "";
     public string FiabiliteDetail { get; init; } = "";
     public Color Couleur { get; init; } = Palette.Orange;
+    public Color Clair { get; init; } = Palette.OrangeClair;
+    public string StatutCourt { get; init; } = "";
     public Color CouleurFiabilite { get; init; } = Palette.Gris;
     public Color ClairFiabilite { get; init; } = Palette.FondGris;
     public string Statut { get; init; } = "";
@@ -33,64 +35,70 @@ public partial class CarteModeration : ObservableObject
 /// <summary>Écran E09 : file de modération des coupures signalées (UC15).</summary>
 public partial class ModerationViewModel : ObservableObject
 {
-    private readonly CoupureService _coupures;
-    private readonly Session _session;
-    private readonly IHorloge _horloge;
+    private readonly ILumionApi _api;
     private List<CarteModeration> _toutes = [];
 
     [ObservableProperty] private bool _ongletSuspects;
     [ObservableProperty] private string _onglets = "À traiter|Suspects";
+    [ObservableProperty] private string _onglet = "traiter";
     [ObservableProperty] private bool _recentsEnPremier = true;
 
     public string LibelleTri => RecentsEnPremier ? "Plus récents en premier" : "Plus anciens en premier";
     public ObservableCollection<CarteModeration> Cartes { get; } = [];
 
-    public ModerationViewModel(CoupureService coupures, Session session, IHorloge horloge)
-    {
-        _coupures = coupures;
-        _session = session;
-        _horloge = horloge;
-    }
+    public ModerationViewModel(ILumionApi api) => _api = api;
 
     partial void OnOngletSuspectsChanged(bool value) => Afficher();
+    partial void OnOngletChanged(string value) => OngletSuspects = value == "suspects";
 
     partial void OnRecentsEnPremierChanged(bool value)
     {
         OnPropertyChanged(nameof(LibelleTri));
-        Charger();
+        _ = Charger();
     }
 
     [RelayCommand]
     private void InverserTri() => RecentsEnPremier = !RecentsEnPremier;
 
-    public void Charger()
+    public async Task Charger()
     {
-        if (_session.Utilisateur is not { } moderateur) return;
-        var maintenant = _horloge.UtcNow;
-        var file = _coupures.FileModeration(moderateur);
+        List<CoupureAModerer> file;
+        try
+        {
+            file = await _api.FileModeration();
+        }
+        catch (Exception e) when (e is HttpRequestException or ApiException)
+        {
+            await Nav.Erreur(e, "File de modération indisponible");
+            return;
+        }
+        var maintenant = DateTime.UtcNow;
         if (!RecentsEnPremier) file.Reverse();
 
-        _toutes = file.Select(c =>
+        _toutes = file.Select(m =>
         {
-            var fiabilite = _coupures.FiabiliteDe(c);
-            bool nonVerifies = _coupures.ASignalementsNonVerifies(c.Id);
+            var c = m.Coupure;
+            var fiabilite = m.Fiabilite;
+            bool nonVerifies = m.NonVerifies;
             var (couleur, clair) = fiabilite.Libelle switch
             {
                 "Élevée" => (Palette.Vert, Palette.VertClair),
                 "Moyenne" => (Palette.PrimaireFonce, Palette.PrimaireClair),
                 _ => (Palette.Rouge, Palette.RougeClair)
             };
-            int total = _coupures.Chronologie(c.Id).Count(s => s.Type != TypeSignalement.Retour);
+            int total = m.NbSignalements;
             return new CarteModeration
             {
                 CoupureId = c.Id,
-                Quartier = _coupures.QuartierParId(c.QuartierId)?.Nom ?? "",
+                Quartier = m.Quartier,
                 Date = Heure.Relative(c.Debut, maintenant),
                 Premiers = Heure.Relative(c.Debut, maintenant),
-                Signalements = $"{total} signalement{(total > 1 ? "s" : "")}" + (nonVerifies ? " (dont à vérifier)" : ""),
+                Signalements = $"{total} signalement{(total > 1 ? "s" : "")}" + (nonVerifies ? ", dont à vérifier" : ""),
                 Fiabilite = fiabilite.Libelle == "Faible" ? "Faible fiabilité" : $"Fiabilité {fiabilite.Libelle.ToLowerInvariant()}",
-                FiabiliteDetail = $"{fiabilite.Libelle} ({fiabilite.Pourcentage} %)",
+                FiabiliteDetail = $"{fiabilite.Pourcentage} %",
                 Couleur = c.Statut == StatutCoupure.Confirmee ? Palette.Rouge : Palette.Orange,
+                Clair = c.Statut == StatutCoupure.Confirmee ? Palette.RougeClair : Palette.OrangeClair,
+                StatutCourt = c.Statut == StatutCoupure.Confirmee ? "Sans courant" : "À confirmer",
                 CouleurFiabilite = couleur, ClairFiabilite = clair,
                 Statut = c.Statut == StatutCoupure.Confirmee ? "Confirmée" : "Signalée, non confirmée",
                 Suspecte = fiabilite.Libelle == "Faible" || nonVerifies,
@@ -98,7 +106,7 @@ public partial class ModerationViewModel : ObservableObject
             };
         }).ToList();
 
-        Onglets = $"À traiter ({_toutes.Count(c => !c.Suspecte)})|Suspects ({_toutes.Count(c => c.Suspecte)})";
+        Onglets = $"À traiter · {_toutes.Count(c => !c.Suspecte)}|Suspects · {_toutes.Count(c => c.Suspecte)}";
         Afficher();
     }
 
@@ -139,7 +147,7 @@ public partial class ModerationViewModel : ObservableObject
     [RelayCommand]
     private async Task Cloturer(CarteModeration carte)
     {
-        var maintenant = Heure.Locale(_horloge.UtcNow);
+        var maintenant = Heure.Locale(DateTime.UtcNow);
         var saisie = await Shell.Current.DisplayPromptAsync("Clôturer la coupure", "Heure de fin (HH:mm), aujourd'hui.",
             "Clôturer", "Annuler", initialValue: maintenant.ToString("HH:mm"), maxLength: 5, keyboard: Keyboard.Text);
         if (saisie is null) return;
@@ -158,10 +166,15 @@ public partial class ModerationViewModel : ObservableObject
 
     private async Task Appliquer(CarteModeration carte, ActionModeration action, string? motif, DateTime? finUtc = null)
     {
-        if (_session.Utilisateur is not { } moderateur) return;
-        var resultat = _coupures.Moderer(carte.CoupureId, moderateur, action, motif, finUtc);
-        // UC15 E1 : un autre modérateur a déjà traité la coupure → message et rafraîchissement.
-        if (!resultat.Ok) await Nav.Alerte("Action impossible", resultat.Message);
-        Charger();
+        try
+        {
+            await _api.Moderer(carte.CoupureId, new DemandeModeration(action, motif, finUtc));
+        }
+        catch (Exception e) when (e is HttpRequestException or ApiException)
+        {
+            // UC15 E1 : un autre modérateur a déjà traité la coupure → message et rafraîchissement.
+            await Nav.Erreur(e);
+        }
+        await Charger();
     }
 }

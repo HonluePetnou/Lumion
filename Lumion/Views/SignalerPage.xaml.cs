@@ -1,4 +1,3 @@
-using Lumion.Services;
 using Lumion.ViewModels;
 
 namespace Lumion.Views;
@@ -14,6 +13,4 @@ public partial class SignalerPage : ContentPage
     }
 
     private void EtendueChangee(object? sender, string etendue) => _vm.ChoisirEtendueCommand.Execute(etendue);
-
-    private async void Retour(object? sender, TappedEventArgs e) => await Nav.Retour();
 }
