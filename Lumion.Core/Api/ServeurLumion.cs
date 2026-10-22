@@ -280,7 +280,7 @@ public class ServeurLumion
             if (Exiger(c) is { } refus) return refus;
             var s = c.Corps<NouveauSignalement>();
             var r = _coupures.Signaler(c.Utilisateur!.Id, s.QuartierId, s.Type, s.Etendue, s.Commentaire, s.Latitude,
-                s.Longitude, s.Geolocalise, s.Verifie, s.CreeLe);
+                s.Longitude, s.Geolocalise, s.Verifie, s.CreeLe, s.DepuisMinutes);
             return r.Ok ? Reponse.Cree(r) : Reponse.Erreur(r.Code, r.Message);
         }),
         new("DELETE", "/signalements/{id}", c => Exiger(c) ?? Reponse.Depuis(_coupures.Annuler(c.Id(), c.Utilisateur!.Id))),

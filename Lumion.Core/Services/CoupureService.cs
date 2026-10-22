@@ -110,7 +110,8 @@ public class CoupureService(LumionDb db, IHorloge horloge, Parametres parametres
 
     public ResultatSignalement Signaler(int utilisateurId, int quartierId, TypeSignalement type,
         Etendue etendue = Etendue.Quartier, string? commentaire = null, double? latitude = null,
-        double? longitude = null, bool geolocalise = false, bool verifie = true, DateTime? creeLe = null)
+        double? longitude = null, bool geolocalise = false, bool verifie = true, DateTime? creeLe = null,
+        int depuisMinutes = 0)
     {
         lock (db.Verrou)
         {
@@ -144,9 +145,12 @@ public class CoupureService(LumionDb db, IHorloge horloge, Parametres parametres
                 if (type == TypeSignalement.Confirmation)
                     return Erreur(CodeErreur.AucuneCoupureOuverte,
                         "Cette coupure vient d'être clôturée. Vous pouvez signaler une nouvelle coupure.");
+                // « Depuis quand ? » : le premier signalement peut avancer le début, dans une limite raisonnable.
+                int avance = Math.Clamp(depuisMinutes, 0, parametres.RetroactiviteMaxMin);
                 coupure = new Coupure
                 {
-                    QuartierId = quartierId, Type = TypeCoupure.Signalee, Statut = StatutCoupure.Signalee, Debut = instant
+                    QuartierId = quartierId, Type = TypeCoupure.Signalee, Statut = StatutCoupure.Signalee,
+                    Debut = instant.AddMinutes(-avance)
                 };
                 db.Conn.Insert(coupure);
             }
@@ -358,7 +362,8 @@ public class CoupureService(LumionDb db, IHorloge horloge, Parametres parametres
                         modifies.Add(coupure.QuartierId);
                     }
                 }
-                else if (maintenant - coupure.Debut >= TimeSpan.FromHours(parametres.ExpirationH))
+                else if (maintenant - Actifs(coupure.Id).Select(s => s.CreeLe).DefaultIfEmpty(coupure.Debut).Min()
+                         >= TimeSpan.FromHours(parametres.ExpirationH))
                 {
                     coupure.Statut = StatutCoupure.Expiree;
                     db.Conn.Update(coupure);

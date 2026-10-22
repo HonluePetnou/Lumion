@@ -56,7 +56,7 @@ public record DetailCoupure(Coupure Coupure, string Quartier, List<LigneChronolo
 
 public record NouveauSignalement(int QuartierId, TypeSignalement Type, Etendue Etendue = Etendue.Quartier,
     string? Commentaire = null, double? Latitude = null, double? Longitude = null, bool Geolocalise = false,
-    bool Verifie = true, DateTime? CreeLe = null);
+    bool Verifie = true, DateTime? CreeLe = null, int DepuisMinutes = 0);
 
 public record MonSignalement(Signalement Signalement, string Quartier, bool Annulable, int MinutesRestantes);
 

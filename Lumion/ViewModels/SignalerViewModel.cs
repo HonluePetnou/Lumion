@@ -27,6 +27,8 @@ public partial class SignalerViewModel : ObservableObject, IQueryAttributable
     [ObservableProperty] private Color _couleurGps = Palette.Gris;
     [ObservableProperty] private string _iconeGps = "Cible";
     [ObservableProperty] private bool _envoiEnCours;
+    /// <summary>« Depuis quand ? » en minutes : 0, 15, 30 ou 60.</summary>
+    [ObservableProperty] private string _depuis = "0";
 
     public string Compteur => $"{Commentaire.Length}/200";
     public bool Pret => !EnvoiEnCours;
@@ -118,7 +120,8 @@ public partial class SignalerViewModel : ObservableObject, IQueryAttributable
         {
             // Sans réseau, LumionApi garde le signalement avec son heure réelle et l'enverra plus tard (EF2.5).
             var resultat = await _api.Signaler(new NouveauSignalement(Quartier.Id, TypeSignalement.Coupure, Etendue,
-                Commentaire, _position?.Lat, _position?.Lng, _position is not null, Verifie));
+                Commentaire, _position?.Lat, _position?.Lng, _position is not null, Verifie,
+                DepuisMinutes: int.TryParse(Depuis, out var minutes) ? minutes : 0));
             if (resultat.EnAttente)
                 await Nav.Alerte("Signalement enregistré", resultat.Message);
             else

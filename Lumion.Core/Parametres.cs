@@ -13,7 +13,9 @@ public class Parametres
     public int InactiviteClotureH { get; set; } = 6;
     /// <summary>RG05 : minutes ajoutées au dernier signalement pour estimer la fin.</summary>
     public int MargeClotureMin { get; set; } = 30;
-    /// <summary>RG06 : heures avant expiration d'une coupure jamais confirmée.</summary>
+    /// <summary>« Depuis quand ? » : le début déclaré peut précéder le signalement de 60 minutes au plus.</summary>
+    public int RetroactiviteMaxMin { get; set; } = 60;
+    /// <summary>RG06 : heures avant expiration d'une coupure jamais confirmée, comptées depuis le premier signalement.</summary>
     public int ExpirationH { get; set; } = 2;
     /// <summary>RG06 : durée en dessous de laquelle une coupure est « brève ».</summary>
     public int BreveMin { get; set; } = 2;

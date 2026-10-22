@@ -54,7 +54,11 @@ public class Choix : ContentView
         var grille = new Grid { ColumnSpacing = Segment ? 4 : 8 };
         for (int i = 0; i < libelles.Length; i++)
         {
-            grille.ColumnDefinitions.Add(new ColumnDefinition(etire ? GridLength.Star : GridLength.Auto));
+            // Puces étirées : largeur au prorata du libellé, pour que les plus longs ne soient pas tronqués.
+            grille.ColumnDefinitions.Add(new ColumnDefinition(
+                Segment ? GridLength.Star
+                : etire ? new GridLength(libelles[i].Length + 5, GridUnitType.Star)
+                : GridLength.Auto));
             string valeur = valeurs is not null && i < valeurs.Length ? valeurs[i] : libelles[i];
             var texte = new Label
             {

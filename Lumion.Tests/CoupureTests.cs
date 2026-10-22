@@ -22,6 +22,32 @@ public class CoupureTests : IDisposable
     }
 
     [Fact]
+    public void Depuis_quand_avance_le_debut_dans_la_limite_d_une_heure()
+    {
+        var maintenant = _b.Horloge.UtcNow;
+        var r = _b.Coupures.Signaler(_b.Habitant().Id, _b.Bonamoussadi.Id, TypeSignalement.Coupure, depuisMinutes: 30);
+        Assert.Equal(maintenant.AddMinutes(-30), r.Coupure!.Debut);
+
+        // Au-delà de la limite, le début n'est avancé que d'une heure.
+        var autre = _b.Coupures.Signaler(_b.Habitant().Id, _b.Deido.Id, TypeSignalement.Coupure, depuisMinutes: 600);
+        Assert.Equal(maintenant.AddMinutes(-_b.Parametres.RetroactiviteMaxMin), autre.Coupure!.Debut);
+    }
+
+    [Fact]
+    public void Depuis_quand_ne_raccourcit_pas_le_delai_d_expiration()
+    {
+        // RG06 : l'expiration se compte depuis le premier signalement, pas depuis le début déclaré.
+        var coupure = _b.Coupures.Signaler(_b.Habitant().Id, _b.Bonamoussadi.Id, TypeSignalement.Coupure, depuisMinutes: 60).Coupure!;
+        _b.Horloge.Avancer(TimeSpan.FromHours(_b.Parametres.ExpirationH) - TimeSpan.FromMinutes(5));
+        _b.Coupures.Planifier();
+        Assert.Equal(StatutCoupure.Signalee, _b.Coupures.CoupureParId(coupure.Id)!.Statut);
+
+        _b.Horloge.Avancer(TimeSpan.FromMinutes(5));
+        _b.Coupures.Planifier();
+        Assert.Equal(StatutCoupure.Expiree, _b.Coupures.CoupureParId(coupure.Id)!.Statut);
+    }
+
+    [Fact]
     public void CA04_RG03_un_second_signalement_est_rattache_a_la_coupure_ouverte()
     {
         var premiere = _b.Signaler(_b.Habitant(), _b.Bonamoussadi).Coupure!;

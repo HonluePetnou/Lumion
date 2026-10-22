@@ -146,13 +146,25 @@
 
                 <!-- Feuille du quartier (UC05, UC09) -->
                 <Border BackgroundColor="{StaticResource Surface}" StrokeThickness="0" StrokeShape="RoundRectangle 28,28,0,0"
-                        Padding="16,10,16,14">
+                        Padding="16,0,16,14">
                     <Border.Shadow>
                         <Shadow Brush="{StaticResource Texte}" Opacity="0.16" Radius="24" Offset="0,-6" />
                     </Border.Shadow>
-                    <VerticalStackLayout Spacing="14">
-                        <BoxView WidthRequest="40" HeightRequest="4" CornerRadius="2" Color="{StaticResource Bordure}"
-                                 HorizontalOptions="Center" />
+                    <!-- Glisser vers le haut déplie la feuille, vers le bas la replie : la carte reste visible. -->
+                    <Border.GestureRecognizers>
+                        <SwipeGestureRecognizer Direction="Up" Command="{Binding DeplierFicheCommand}" />
+                        <SwipeGestureRecognizer Direction="Down" Command="{Binding ReplierFicheCommand}" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="12">
+                        <Grid HeightRequest="22" BackgroundColor="Transparent" IsVisible="{Binding AFiche}"
+                              SemanticProperties.Description="Déplier ou replier la fiche du quartier">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding BasculerFicheCommand}" />
+                            </Grid.GestureRecognizers>
+                            <BoxView WidthRequest="40" HeightRequest="4" CornerRadius="2" Color="{StaticResource Bordure}"
+                                     HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Grid>
+                        <BoxView HeightRequest="10" Color="Transparent" IsVisible="{Binding SansFiche}" />
 
                         <!-- Sans fiche : légende des statuts (couleur + libellé, ENF6) -->
                         <VerticalStackLayout Spacing="10" IsVisible="{Binding SansFiche}">
@@ -187,7 +199,11 @@
 
                         <!-- Fiche -->
                         <VerticalStackLayout Spacing="14" IsVisible="{Binding AFiche}">
-                            <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="2">
+                            <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="2"
+                                  BackgroundColor="Transparent">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding BasculerFicheCommand}" />
+                                </Grid.GestureRecognizers>
                                 <Label Text="{Binding Fiche.Surtitre}" Style="{StaticResource Surtitre}" VerticalOptions="Center" />
                                 <Label Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Fiche.Nom}" Style="{StaticResource TitrePage}"
                                        LineBreakMode="TailTruncation" />
@@ -206,7 +222,14 @@
                                     </Border.GestureRecognizers>
                                     <c:Icone Nom="Croix" Taille="16" />
                                 </Border>
+                                <c:Icone Grid.Column="2" Grid.RowSpan="2" Nom="{Binding ChevronFiche}" Taille="20"
+                                         Couleur="{StaticResource Texte2}" IsVisible="{Binding Fiche.EstMonQuartier}" />
+                                <!-- Feuille repliée : l'essentiel en une ligne -->
+                                <Label Grid.Row="2" Grid.ColumnSpan="3" Text="{Binding Fiche.ResumeCourt}" Style="{StaticResource TexteSecondaire}"
+                                       LineBreakMode="TailTruncation" IsVisible="{Binding FicheRepliee}" />
                             </Grid>
+
+                            <VerticalStackLayout Spacing="14" IsVisible="{Binding FicheDepliee}">
 
                             <!-- Chrono en direct -->
                             <Border Style="{StaticResource BlocVedette}" Padding="16" StrokeShape="RoundRectangle 20"
@@ -290,6 +313,7 @@
                                 <Button Grid.Column="1" Text="Historique" Style="{StaticResource BoutonLien}"
                                         Command="{Binding VoirHistoriqueCommand}" />
                             </Grid>
+                            </VerticalStackLayout>
                         </VerticalStackLayout>
                     </VerticalStackLayout>
                 </Border>

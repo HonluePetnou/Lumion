@@ -62,6 +62,10 @@
                 <!-- Précisions facultatives -->
                 <Border Style="{StaticResource Carte}" Padding="14">
                     <VerticalStackLayout Spacing="12">
+                        <Label Text="Depuis quand ?" Style="{StaticResource Surtitre}" />
+                        <c:Choix Options="À l'instant|15 min|30 min|1 h" Valeurs="0|15|30|60" Selection="{Binding Depuis}"
+                                 Etire="True" />
+                        <BoxView Style="{StaticResource Separateur}" />
                         <Label Text="Où observez-vous la coupure ?" Style="{StaticResource Surtitre}" />
                         <c:Choix Options="Chez moi|Ma rue|Le quartier" Valeurs="Domicile|Rue|Quartier"
                                  Change="EtendueChangee" Etire="True" />

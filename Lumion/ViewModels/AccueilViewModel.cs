@@ -32,6 +32,8 @@ public class FicheQuartier
     /// <summary>Durée en direct, sous la forme « 2 h 47 ».</summary>
     public string Chrono { get; init; } = "";
     public string ChronoDetail { get; init; } = "";
+    /// <summary>Une ligne pour la feuille repliée : la durée en direct, ou la dernière coupure.</summary>
+    public string ResumeCourt { get; init; } = "";
     public string Ville { get; init; } = "";
     public Color Couleur { get; init; } = Palette.Vert;
     public Color Clair { get; init; } = Palette.VertClair;
@@ -78,6 +80,11 @@ public partial class AccueilViewModel : ObservableObject
     [ObservableProperty] private int _nbDelestages;
     [ObservableProperty] private string _initiales = "?";
     [ObservableProperty] private bool _aNonLues;
+    /// <summary>
+    /// Feuille du quartier dépliée. Repliée par défaut pour le quartier de résidence (la carte reste visible),
+    /// dépliée quand l'habitant touche un quartier.
+    /// </summary>
+    [ObservableProperty] private bool _ficheDepliee;
 
     public bool VueListe => !VueCarte;
     public bool AFiche => Fiche is not null;
@@ -242,6 +249,7 @@ public partial class AccueilViewModel : ObservableObject
         Recherche = "";
         if (Etats.FirstOrDefault(e => e.Quartier.Id == quartierId) is { } etat) Centrer?.Invoke(etat.Quartier);
         Fiche = await Construire(quartierId);
+        FicheDepliee = true;
     }
 
     /// <summary>Fermer un autre quartier ramène la feuille sur le quartier de résidence.</summary>
@@ -249,11 +257,29 @@ public partial class AccueilViewModel : ObservableObject
     private async Task FermerFiche()
     {
         Fiche = null;
+        FicheDepliee = false;
         await RafraichirFiche();
     }
 
     [RelayCommand]
     private void BasculerVue() => VueCarte = !VueCarte;
+
+    [RelayCommand]
+    private void BasculerFiche() => FicheDepliee = !FicheDepliee;
+
+    [RelayCommand]
+    private void DeplierFiche() => FicheDepliee = true;
+
+    [RelayCommand]
+    private void ReplierFiche() => FicheDepliee = false;
+
+    public string ChevronFiche => FicheDepliee ? "ChevronBas" : "ChevronHaut";
+    public bool FicheRepliee => !FicheDepliee;
+    partial void OnFicheDeplieeChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ChevronFiche));
+        OnPropertyChanged(nameof(FicheRepliee));
+    }
 
     [RelayCommand]
     private Task VoirCoupure() => Fiche is { CoupureId: > 0 } f ? Nav.Aller("coupure", "coupureId", f.CoupureId) : Task.CompletedTask;
@@ -306,6 +332,10 @@ public partial class AccueilViewModel : ObservableObject
             Id = quartierId, Nom = etat.Quartier.Nom, CoupureId = coupure?.Id ?? 0,
             Surtitre = mien ? "Mon quartier" : "Quartier", EstMonQuartier = mien,
             Chrono = coupure is null ? "" : Duree(maintenant - coupure.Debut),
+            ResumeCourt = coupure is not null ? $"{Duree(maintenant - coupure.Debut)} sans courant · depuis {Heure.Locale(coupure.Debut):HH:mm}"
+                : etat.Statut == StatutQuartier.Delestage ? description
+                : f.DerniereTerminee is { } precedente ? $"Dernière coupure {Heure.Relative(precedente.Debut, maintenant).ToLowerInvariant()}"
+                : "Aucune coupure enregistrée",
             ChronoDetail = coupure is null ? ""
                 : (coupure.FinPrevue is { } finPrevue ? $"délestage · fin prévue {Heure.Locale(finPrevue):HH:mm}" : "sans courant")
                   + $" · depuis {Heure.Locale(coupure.Debut):HH:mm} · {Pluriel(coupure.NbConfirmations, "voisin")}", Ville = $"{etat.Quartier.Arrondissement} · {etat.Quartier.Ville}",
