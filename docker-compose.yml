@@ -1,16 +1,26 @@
-# Déploiement du serveur Lumion (VPS) : l'image est construite depuis le dépôt GitHub.
+# Déploiement du serveur Lumion (VPS Hostinger, projet Docker « lumion »).
+# L'image officielle .NET clone le dépôt GitHub, compile puis lance l'API : aucune image à publier,
+# et un redémarrage du projet déploie la dernière version de la branche main.
+# (Lumion.Api/Dockerfile reste disponible pour construire une image classique.)
 services:
   api:
-    build:
-      context: https://github.com/HonluePetnou/Lumion.git#main
-      dockerfile: Lumion.Api/Dockerfile
+    image: mcr.microsoft.com/dotnet/sdk:9.0
     container_name: lumion-api
     restart: unless-stopped
+    working_dir: /src
+    command: >
+      sh -c "rm -rf /src/depot &&
+             git clone --depth 1 https://github.com/HonluePetnou/Lumion.git /src/depot &&
+             cd /src/depot && rm -f global.json &&
+             dotnet publish Lumion.Api/Lumion.Api.csproj -c Release -o /app --nologo &&
+             cd /app && exec dotnet Lumion.Api.dll"
     ports:
       - "5080:5080"
     environment:
+      ASPNETCORE_URLS: "http://0.0.0.0:5080"
+      Lumion__Donnees: "/donnees"
       # En ligne, le code de connexion d'un compte modérateur ou administrateur n'est jamais renvoyé à
-      # l'application : il n'apparaît que dans les journaux du serveur (docker logs lumion-api).
+      # l'application : il n'apparaît que dans les journaux du serveur.
       Lumion__EnLigne: "true"
       Lumion__AfficherCodeOtp: "true"
     volumes:
