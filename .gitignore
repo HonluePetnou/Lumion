@@ -8,3 +8,6 @@ obj/
 
 # Base de données du serveur local
 Lumion.Api/donnees/
+
+# APK de démonstration (généré)
+apk/

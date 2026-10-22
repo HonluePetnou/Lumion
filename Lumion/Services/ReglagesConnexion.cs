@@ -14,9 +14,19 @@ public class ReglagesConnexion(ServeurEmbarque embarque)
     /// <summary>Levé quand le mode ou l'adresse change : le client HTTP est reconstruit.</summary>
     public event Action? Change;
 
-    /// <summary>Adresse par défaut : le PC lui-même sous Windows, l'hôte de l'émulateur sous Android.</summary>
+    /// <summary>Serveur Lumion en ligne (VPS), utilisé par défaut par l'application distribuée.</summary>
+    public const string AdresseEnLigne = "http://31.97.76.16:5080";
+
+    /// <summary>
+    /// Adresse par défaut. Version distribuée (Release) : le serveur en ligne.
+    /// En développement : le PC lui-même sous Windows, l'hôte de l'émulateur sous Android.
+    /// </summary>
     public static string AdresseParDefaut =>
+#if DEBUG
         DeviceInfo.Platform == DevicePlatform.Android ? "http://10.0.2.2:5080" : "http://localhost:5080";
+#else
+        AdresseEnLigne;
+#endif
 
     public ModeConnexion Mode
     {
