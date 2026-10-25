@@ -119,6 +119,9 @@ public class CoupureService(LumionDb db, IHorloge horloge, Parametres parametres
             var instant = creeLe ?? maintenant;
             var utilisateur = db.Conn.Find<Utilisateur>(utilisateurId);
             if (utilisateur is null) return Erreur(CodeErreur.Introuvable, "Utilisateur introuvable.");
+            var quartier = QuartierParId(quartierId);
+            if (quartier is not { Actif: true })
+                return Erreur(CodeErreur.Introuvable, "Quartier introuvable ou inactif.");
 
             if (utilisateur.SuspenduJusqua is { } fin && fin > maintenant)
                 return Erreur(CodeErreur.UtilisateurSuspendu,
@@ -173,7 +176,15 @@ public class CoupureService(LumionDb db, IHorloge horloge, Parametres parametres
                 CoupureId = coupure.Id, UtilisateurId = utilisateurId, Type = type, Etendue = etendue,
                 Commentaire = string.IsNullOrWhiteSpace(commentaire) ? null : commentaire.Trim(),
                 Latitude = latitude, Longitude = longitude, Geolocalise = geolocalise,
-                Verifie = verifie || !parametres.VerificationGpsStricte,
+                // Sans GPS, le parcours manuel reste autorisé. Dès qu'une position est
+                // fournie, seul le serveur décide si elle appartient au quartier.
+                Verifie = !parametres.VerificationGpsStricte ||
+                    (latitude is null && longitude is null && !geolocalise
+                        ? true
+                        : latitude is { } lat && longitude is { } lng &&
+                          double.IsFinite(lat) && double.IsFinite(lng) &&
+                          lat is >= -90 and <= 90 && lng is >= -180 and <= 180 &&
+                          Geo.Contient(Geo.Lire(quartier.Perimetre), new Point(lat, lng))),
                 Statut = StatutSignalement.Actif, CreeLe = instant, RecuLe = maintenant
             };
             db.Conn.Insert(signalement);
@@ -347,16 +358,16 @@ public class CoupureService(LumionDb db, IHorloge horloge, Parametres parametres
                 var dernier = Actifs(coupure.Id).Select(s => s.CreeLe).DefaultIfEmpty(coupure.Debut).Max();
                 if (coupure.Statut == StatutCoupure.Confirmee)
                 {
-                    if (coupure.Type == TypeCoupure.Delestage && coupure.FinPrevue is { } prevue)
+                    if (coupure.Type == TypeCoupure.Delestage && coupure.FinPrevue is { } prevue &&
+                        prevue <= maintenant && dernier <= prevue)
                     {
                         // Sans retour signalé, un délestage se termine à l'heure annoncée.
-                        if (prevue <= maintenant && dernier <= prevue)
-                        {
-                            Terminer(coupure, prevue, estimee: true);
-                            modifies.Add(coupure.QuartierId);
-                        }
+                        Terminer(coupure, prevue, estimee: true);
+                        modifies.Add(coupure.QuartierId);
                     }
-                    else if (maintenant - dernier >= TimeSpan.FromHours(parametres.InactiviteClotureH))
+                    else if ((coupure.Type != TypeCoupure.Delestage || coupure.FinPrevue is null ||
+                              coupure.FinPrevue <= maintenant) &&
+                             maintenant - dernier >= TimeSpan.FromHours(parametres.InactiviteClotureH))
                     {
                         Terminer(coupure, dernier.AddMinutes(parametres.MargeClotureMin), estimee: true);
                         modifies.Add(coupure.QuartierId);

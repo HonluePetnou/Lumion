@@ -20,6 +20,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Lumion.Core\Lumion.Core.csproj" />
+    <Compile Include="..\Lumion\Services\LumionApi.cs" Link="Client\LumionApi.cs" />
+    <Compile Include="..\Lumion\Services\TransportSecurise.cs" Link="Client\TransportSecurise.cs" />
   </ItemGroup>
 
 </Project>

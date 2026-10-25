@@ -15,9 +15,12 @@ services:
              dotnet publish Lumion.Api/Lumion.Api.csproj -c Release -o /app --nologo &&
              cd /app && exec dotnet Lumion.Api.dll"
     ports:
-      - "5080:5080"
+      - "127.0.0.1:5080:5080"
+      - "443:8443"
     environment:
-      ASPNETCORE_URLS: "http://0.0.0.0:5080"
+      ASPNETCORE_URLS: "http://0.0.0.0:5080;https://0.0.0.0:8443"
+      ASPNETCORE_Kestrel__Certificates__Default__Path: "/certificats/serveur.pfx"
+      ASPNETCORE_Kestrel__Certificates__Default__Password: "${LUMION_CERT_PASSWORD:?Définir le mot de passe du certificat PFX}"
       Lumion__Donnees: "/donnees"
       # En ligne, le code de connexion d'un compte modérateur ou administrateur n'est jamais renvoyé à
       # l'application : il n'apparaît que dans les journaux du serveur.
@@ -25,6 +28,7 @@ services:
       Lumion__AfficherCodeOtp: "true"
     volumes:
       - lumion-donnees:/donnees
+      - "${LUMION_CERT_PATH:?Définir le chemin absolu du certificat PFX}:/certificats/serveur.pfx:ro"
 
 volumes:
   lumion-donnees:

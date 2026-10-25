@@ -53,6 +53,37 @@ Les tests :
 dotnet test Lumion.Tests
 ```
 
+### Déploiement HTTPS
+
+Les versions Release utilisent `https://31.97.76.16` par défaut et refusent toute
+adresse HTTP réseau avant d'envoyer une requête. Une autre adresse HTTPS peut être
+saisie dans Profil → Connexion. HTTP reste disponible dans les builds Debug pour
+le développement local ; le mode autonome ne passe pas par le réseau.
+
+Avant de déployer avec Docker Compose, fournir un certificat PFX signé par une
+autorité reconnue par les appareils, contenant sa clé privée et sa chaîne de
+certification. Son identité doit correspondre à l'adresse utilisée : l'IP
+`31.97.76.16` pour l'adresse par défaut, ou le domaine configuré dans l'application.
+Définir `LUMION_CERT_PATH` (chemin absolu du fichier sur l'hôte) et
+`LUMION_CERT_PASSWORD` dans l'environnement du déploiement, puis lancer
+`docker compose up -d`. Ne pas enregistrer le certificat ni son mot de passe dans Git.
+Le port HTTPS public est 443 ; le port HTTP 5080 est limité à la boucle locale du
+serveur. Sans certificat valide, la connexion Release reste indisponible : aucun
+repli HTTP ni contournement de validation du certificat n'est prévu.
+
+### Données hors ligne
+
+Le cache est isolé par serveur et session, et la file des signalements par serveur
+et compte. Une reconnexion au même compte permet de reprendre les envois ; les
+erreurs temporaires (session expirée, suspension, limite horaire, panne serveur)
+conservent les signalements en attente. Les refus définitifs ne sont pas comptés
+comme des envois réussis.
+
+Les anciens fichiers `api/` et `signalements-en-attente.json` ne sont plus lus.
+Ils restent sur l'appareil, mais ne peuvent pas être migrés automatiquement car
+ils ne permettent pas d'identifier leur serveur et leur propriétaire. Les nouvelles
+données utilisent `api-v2/` et `signalements-v2/`.
+
 ## Comptes de démonstration
 
 La connexion se fait par numéro de téléphone et code à 6 chiffres. Aucun fournisseur SMS n'est
@@ -78,8 +109,8 @@ délestage annoncé. Administration → Export → « Réinitialiser la démo »
 
 ## Limites connues
 
-- Pas encore de serveur en ligne : en mode serveur, le PC qui exécute `Lumion.Api` doit être
-  joignable par le téléphone. Les notifications sont produites par l'application (pas de push).
+- En mode serveur, l'API doit être joignable par le téléphone (HTTPS en Release).
+  Les notifications sont produites par l'application (pas de push).
 - La politique d'usage des tuiles OpenStreetMap limite leur emploi à un faible trafic : pour une
   diffusion large, il faudra un fournisseur de tuiles (ou un serveur de tuiles) dédié.
 - Les périmètres des quartiers sont des approximations autour d'un point central ; un

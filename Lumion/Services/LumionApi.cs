@@ -79,11 +79,10 @@ public interface ILumionApi
 /// Hors ligne, les dernières réponses sont relues depuis un cache local et les signalements
 /// sont gardés dans une file d'attente JSON, envoyée au retour du réseau.
 /// </summary>
-public class LumionApi : ILumionApi
+public partial class LumionApi : ILumionApi
 {
-    private readonly ReglagesConnexion _reglages;
-    private readonly string _dossierCache = Path.Combine(FileSystem.CacheDirectory, "api");
-    private readonly string _fichierFile = Path.Combine(FileSystem.AppDataDirectory, "signalements-en-attente.json");
+    private readonly string _dossierCache;
+    private readonly string _dossierFiles;
     private readonly SemaphoreSlim _verrouFile = new(1, 1);
     private HttpClient _http;
     private bool _horsLigne;
@@ -94,34 +93,53 @@ public class LumionApi : ILumionApi
 
     /// <summary>Jeton de session ajouté à chaque requête (fourni par la Session).</summary>
     public Func<string?> Jeton { get; set; } = () => null;
+    public Func<int?> UtilisateurId { get; set; } = () => null;
+    public event Action? ConnexionChangee;
 
     /// <summary>Levé quand le serveur refuse le jeton (session expirée ou révoquée).</summary>
     public event Action? SessionRefusee;
 
-    public LumionApi(ReglagesConnexion reglages)
+    public LumionApi(HttpClient http, string dossierCache, string dossierFiles)
     {
-        _reglages = reglages;
-        _http = reglages.CreerClient();
-        reglages.Change += () => _http = reglages.CreerClient();
+        _http = http;
+        _dossierCache = dossierCache;
+        _dossierFiles = dossierFiles;
         Directory.CreateDirectory(_dossierCache);
+        Directory.CreateDirectory(_dossierFiles);
     }
+
+    public void ChangerClient(HttpClient http)
+    {
+        _http = http;
+        ConnexionChangee?.Invoke();
+    }
+
+    private sealed record ContexteClient(HttpClient Http, string? Jeton, int? UtilisateurId);
+    private ContexteClient Capturer() => new(_http, Jeton(), UtilisateurId());
+    private bool EstCourant(ContexteClient contexte) => contexte == Capturer();
+    private static string Empreinte(string valeur) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(valeur)));
+    private string FichierFile(ContexteClient contexte) => Path.Combine(_dossierFiles,
+        Empreinte($"{contexte.Http.BaseAddress}\n{contexte.UtilisateurId}") + ".json");
 
     // ---------- Mécanique HTTP ----------
 
-    private HttpRequestMessage Requete(HttpMethod methode, string chemin, object? corps = null)
+    private static HttpRequestMessage Requete(ContexteClient contexte, HttpMethod methode, string chemin, object? corps = null)
     {
         var requete = new HttpRequestMessage(methode, chemin.TrimStart('/'));
-        if (Jeton() is { } jeton) requete.Headers.Authorization = new("Bearer", jeton);
+        if (contexte.Jeton is { } jeton) requete.Headers.Authorization = new("Bearer", jeton);
         if (corps is not null) requete.Content = JsonContent.Create(corps, corps.GetType(), options: ApiJson.Options);
         return requete;
     }
 
-    private async Task<string> Envoyer(HttpMethod methode, string chemin, object? corps = null)
+    private async Task<string> Envoyer(HttpMethod methode, string chemin, object? corps = null,
+        ContexteClient? contexte = null)
     {
+        contexte ??= Capturer();
+        using var requete = Requete(contexte, methode, chemin, corps);
         HttpResponseMessage reponse;
         try
         {
-            reponse = await _http.SendAsync(Requete(methode, chemin, corps));
+            reponse = await contexte.Http.SendAsync(requete);
         }
         catch (TaskCanceledException)
         {
@@ -135,11 +153,13 @@ public class LumionApi : ILumionApi
         }
         MarquerHorsLigne(false);
 
+        using var reponseDisposee = reponse;
         var texte = await reponse.Content.ReadAsStringAsync();
         if (reponse.IsSuccessStatusCode) return texte;
 
         var erreur = TryLire<ErreurApi>(texte) ?? new ErreurApi(CodeErreur.DonneesInvalides, $"Erreur du serveur ({(int)reponse.StatusCode}).");
-        if (erreur.Code == CodeErreur.NonConnecte && Jeton() is not null) SessionRefusee?.Invoke();
+        if ((reponse.StatusCode == System.Net.HttpStatusCode.Unauthorized || erreur.Code == CodeErreur.NonConnecte) &&
+            contexte.Jeton is not null && EstCourant(contexte)) SessionRefusee?.Invoke();
         throw new ApiException(erreur.Code, erreur.Message, (int)reponse.StatusCode);
     }
 
@@ -159,17 +179,23 @@ public class LumionApi : ILumionApi
 
     private async Task<T> Lire<T>(string chemin)
     {
-        var fichier = Path.Combine(_dossierCache, Convert.ToHexString(SHA1.HashData(Encoding.UTF8.GetBytes(chemin))) + ".json");
+        var contexte = Capturer();
+        var fichier = Path.Combine(_dossierCache,
+            Empreinte($"{contexte.Http.BaseAddress}\n{contexte.Jeton}\n{chemin}") + ".json");
         try
         {
-            var texte = await Envoyer(HttpMethod.Get, chemin);
+            var texte = await Envoyer(HttpMethod.Get, chemin, contexte: contexte);
+            if (!EstCourant(contexte)) throw new ApiException(CodeErreur.NonConnecte, "La session a changé.", 401);
             // Cache de la dernière réponse, relu quand le réseau est coupé (comme le cache Preferences du TP).
             await File.WriteAllTextAsync(fichier, texte);
+            if (!EstCourant(contexte)) throw new ApiException(CodeErreur.NonConnecte, "La session a changé.", 401);
             return JsonSerializer.Deserialize<T>(texte, ApiJson.Options)!;
         }
-        catch (HttpRequestException) when (File.Exists(fichier))
+        catch (HttpRequestException) when (EstCourant(contexte) && File.Exists(fichier))
         {
-            return JsonSerializer.Deserialize<T>(await File.ReadAllTextAsync(fichier), ApiJson.Options)!;
+            var texte = await File.ReadAllTextAsync(fichier);
+            if (!EstCourant(contexte)) throw new ApiException(CodeErreur.NonConnecte, "La session a changé.", 401);
+            return JsonSerializer.Deserialize<T>(texte, ApiJson.Options)!;
         }
     }
 
@@ -214,14 +240,18 @@ public class LumionApi : ILumionApi
     /// </summary>
     public async Task<ResultatSignalement> Signaler(NouveauSignalement signalement)
     {
+        var contexte = Capturer();
+        if (contexte.Jeton is null || contexte.UtilisateurId is null)
+            throw new ApiException(CodeErreur.NonConnecte, "Connectez-vous pour signaler une coupure.", 401);
         signalement = signalement with { CreeLe = signalement.CreeLe ?? DateTime.UtcNow };
         try
         {
-            return await Ecrire<ResultatSignalement>(HttpMethod.Post, "signalements", signalement);
+            return JsonSerializer.Deserialize<ResultatSignalement>(
+                await Envoyer(HttpMethod.Post, "signalements", signalement, contexte), ApiJson.Options)!;
         }
         catch (HttpRequestException)
         {
-            await AjouterEnAttente(signalement);
+            await AjouterEnAttente(contexte, signalement);
             return new ResultatSignalement(true, CodeErreur.Aucune,
                 "Vous êtes hors ligne. Votre signalement sera envoyé automatiquement dès le retour du réseau.", EnAttente: true);
         }
@@ -231,21 +261,39 @@ public class LumionApi : ILumionApi
     public Task<List<MonSignalement>> MesSignalements() => Lire<List<MonSignalement>>("me/signalements");
 
     // File d'attente hors ligne : persistance locale en JSON (phase A du TP).
-    public int NbEnAttente => LireFile().Count;
+    public int NbEnAttente
+    {
+        get
+        {
+            var contexte = Capturer();
+            return contexte.Jeton is null || contexte.UtilisateurId is null ? 0 : LireFile(FichierFile(contexte)).Count;
+        }
+    }
 
-    private List<NouveauSignalement> LireFile() =>
-        File.Exists(_fichierFile)
-            ? JsonSerializer.Deserialize<List<NouveauSignalement>>(File.ReadAllText(_fichierFile), ApiJson.Options) ?? []
-            : [];
+    private static List<NouveauSignalement> LireFile(string fichier)
+    {
+        if (!File.Exists(fichier)) return [];
+        using var flux = new FileStream(fichier, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        return JsonSerializer.Deserialize<List<NouveauSignalement>>(flux, ApiJson.Options) ?? [];
+    }
 
-    private async Task AjouterEnAttente(NouveauSignalement signalement)
+    private static async Task SauverFile(string fichier, List<NouveauSignalement> file)
+    {
+        // Remplacement atomique : le compteur ne lit jamais un JSON partiellement écrit.
+        var temporaire = fichier + ".tmp";
+        await File.WriteAllTextAsync(temporaire, JsonSerializer.Serialize(file, ApiJson.Options));
+        File.Move(temporaire, fichier, overwrite: true);
+    }
+
+    private async Task AjouterEnAttente(ContexteClient contexte, NouveauSignalement signalement)
     {
         await _verrouFile.WaitAsync();
         try
         {
-            var file = LireFile();
+            var fichier = FichierFile(contexte);
+            var file = LireFile(fichier);
             file.Add(signalement);
-            await File.WriteAllTextAsync(_fichierFile, JsonSerializer.Serialize(file, ApiJson.Options));
+            await SauverFile(fichier, file);
         }
         finally { _verrouFile.Release(); }
     }
@@ -253,31 +301,35 @@ public class LumionApi : ILumionApi
     /// <summary>Envoie les signalements en attente ; renvoie le nombre envoyé.</summary>
     public async Task<int> EnvoyerFileAttente()
     {
-        if (Jeton() is null || !File.Exists(_fichierFile)) return 0;
+        var contexte = Capturer();
+        if (contexte.Jeton is null || contexte.UtilisateurId is null) return 0;
+        var fichier = FichierFile(contexte);
         await _verrouFile.WaitAsync();
         try
         {
-            var file = LireFile();
+            var file = LireFile(fichier);
             int envoyes = 0;
-            while (file.Count > 0)
+            while (file.Count > 0 && EstCourant(contexte))
             {
                 try
                 {
-                    await Ecrire(HttpMethod.Post, "signalements", file[0]);
+                    await Envoyer(HttpMethod.Post, "signalements", file[0], contexte);
+                    envoyes++;
                 }
-                catch (ApiException)
+                catch (ApiException e) when (e.Statut is 400 or 404 or 409 &&
+                    e.Code is CodeErreur.SignalementDejaActif or CodeErreur.DejaConfirme or
+                        CodeErreur.RetourDejaSignale or CodeErreur.AucuneCoupureOuverte or
+                        CodeErreur.DonneesInvalides or CodeErreur.Introuvable)
                 {
-                    // Refus métier (ex. coupure déjà signalée) : le signalement est abandonné.
+                    // Refus définitif : retirer sans le compter comme envoyé.
                 }
-                catch (HttpRequestException)
+                catch (Exception e) when (e is HttpRequestException or ApiException)
                 {
                     break;
                 }
                 file.RemoveAt(0);
-                envoyes++;
+                await SauverFile(fichier, file);
             }
-            if (file.Count == 0) File.Delete(_fichierFile);
-            else await File.WriteAllTextAsync(_fichierFile, JsonSerializer.Serialize(file, ApiJson.Options));
             return envoyes;
         }
         finally { _verrouFile.Release(); }

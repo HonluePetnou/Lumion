@@ -11,3 +11,11 @@ Lumion.Api/donnees/
 
 # APK de démonstration (généré)
 apk/
+
+# Secrets de déploiement TLS
+.env
+*.pfx
+*.p12
+
+# Fichiers temporaires de génération et de contrôle du rapport
+/tmp/pdfs/

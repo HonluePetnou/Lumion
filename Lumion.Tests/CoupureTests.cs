@@ -130,7 +130,8 @@ public class CoupureTests : IDisposable
         var moderateur = _b.Habitant(Role.Moderateur);
         _b.Signaler(_b.Habitant(), _b.Bonamoussadi);
         _b.Signaler(_b.Habitant(), _b.Bonamoussadi);
-        var r = _b.Coupures.Signaler(_b.Habitant().Id, _b.Bonamoussadi.Id, TypeSignalement.Coupure, verifie: false);
+        var r = _b.Coupures.Signaler(_b.Habitant().Id, _b.Bonamoussadi.Id, TypeSignalement.Coupure,
+            latitude: 0, longitude: 0, geolocalise: true, verifie: false);
 
         Assert.Equal(StatutCoupure.Signalee, r.Coupure!.Statut);
         Assert.Equal(2, r.Coupure.NbConfirmations);

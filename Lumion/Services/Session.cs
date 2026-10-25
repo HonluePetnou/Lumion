@@ -30,6 +30,8 @@ public partial class Session : ObservableObject
     {
         _api = api;
         _api.Jeton = () => Jeton;
+        _api.UtilisateurId = () => Utilisateur?.Id;
+        _api.ConnexionChangee += () => _ = Fermer();
         // Jeton refusé par le serveur (expiré, révoqué, autre base) : retour en visiteur.
         _api.SessionRefusee += () => MainThread.BeginInvokeOnMainThread(() => _ = Fermer());
     }
@@ -57,6 +59,7 @@ public partial class Session : ObservableObject
     public async Task OuvrirAsync(SessionOuverte session)
     {
         Jeton = session.Jeton;
+        Utilisateur = session.Utilisateur;
         await Ecrire(CleJeton, session.Jeton);
         await DefinirProfil(session.Utilisateur);
     }

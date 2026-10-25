@@ -15,7 +15,7 @@ public class ReglagesConnexion(ServeurEmbarque embarque)
     public event Action? Change;
 
     /// <summary>Serveur Lumion en ligne (VPS), utilisé par défaut par l'application distribuée.</summary>
-    public const string AdresseEnLigne = "http://31.97.76.16:5080";
+    public const string AdresseEnLigne = "https://31.97.76.16";
 
     /// <summary>
     /// Adresse par défaut. Version distribuée (Release) : le serveur en ligne.
@@ -36,7 +36,12 @@ public class ReglagesConnexion(ServeurEmbarque embarque)
 
     public string Adresse
     {
-        get => Preferences.Default.Get(CleAdresse, AdresseParDefaut);
+        get
+        {
+            var adresse = Preferences.Default.Get(CleAdresse, AdresseParDefaut);
+            // Migration de l'ancienne adresse distribuée en clair.
+            return adresse.TrimEnd('/') == "http://31.97.76.16:5080" ? AdresseEnLigne : adresse;
+        }
         set { Preferences.Default.Set(CleAdresse, value.Trim().TrimEnd('/')); Change?.Invoke(); }
     }
 
@@ -44,7 +49,8 @@ public class ReglagesConnexion(ServeurEmbarque embarque)
 
     public HttpClient CreerClient()
     {
-        HttpMessageHandler transport = Mode == ModeConnexion.Autonome ? embarque : new HttpClientHandler();
+        HttpMessageHandler transport = Mode == ModeConnexion.Autonome ? embarque :
+            new TransportSecurise(new HttpClientHandler { AllowAutoRedirect = false });
         var adresse = Mode == ModeConnexion.Autonome ? "http://lumion.local" : Adresse;
         return new HttpClient(new SimulateurReseau(transport), disposeHandler: false)
         {

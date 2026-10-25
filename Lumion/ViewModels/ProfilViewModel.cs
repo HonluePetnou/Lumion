@@ -236,12 +236,12 @@ public partial class ProfilViewModel : ObservableObject
         if (choix == adresse)
         {
             var saisie = await Shell.Current.DisplayPromptAsync("Adresse du serveur",
-                "Ex. : http://192.168.1.20:5080 (PC sur le même Wi-Fi) ou l'adresse en ligne.", "Enregistrer", "Annuler",
+                "Saisissez l'adresse HTTPS du serveur (HTTP local disponible en développement).", "Enregistrer", "Annuler",
                 initialValue: _reglages.Adresse, keyboard: Keyboard.Url);
             if (string.IsNullOrWhiteSpace(saisie)) return;
-            if (!Uri.TryCreate(saisie.Trim(), UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https"))
+            if (!Uri.TryCreate(saisie.Trim(), UriKind.Absolute, out var uri) || !TransportSecurise.AdresseAutorisee(uri))
             {
-                await Nav.Alerte("Adresse invalide", "L'adresse doit commencer par http:// ou https://.");
+                await Nav.Alerte("Adresse invalide", "Utilisez une adresse HTTPS. HTTP est réservé aux versions de développement.");
                 return;
             }
             _reglages.Adresse = saisie;
